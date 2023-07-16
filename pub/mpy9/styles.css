@@ -72,51 +72,45 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 .highlight .vi { color: #3333BB } /* Name.Variable.Instance */
 .highlight .vm { color: #996633 } /* Name.Variable.Magic */
 .highlight .il { color: #0000DD; font-weight: bold } /* Literal.Number.Integer.Long */
-    body {
-        font-family: 'Fira Code', monospace;
-        padding: 0;
-        margin: 0;
-    }
-    header {
-        background: #f0f0f0;
-        padding: 20px;
-    }
-    #container { display: flex; }
-    #tree {
-        flex: 0 0 auto;
-        padding: 20px;
-        height: 100%;
-        overflow: auto;
-        font-family: monospace;
-        border-right: 1px solid #ccc;
-        border-bottom: 1px solid #ccc;
-    }
-
-    #content {
-        flex: 1;
-        width: 75%;
-        padding: 20px;
-    }
-
-    .directory {
-        font-weight: bold;
-    }
-
-    .current {
-        font-weight: bold;
-        list-style-type: default;
-    }
-
-    .highlighted {
-        background-color: #ffffaa;
-        display: block;
-    }
-
-    a:hover {
-      font-weight: bold;
-    }
-    a { color: black }
-    #tree a, .normal a { text-decoration: none; }
-    #tree li { list-style-type: none; padding-bottom: 2px; }
-    .normal a { color: grey; padding-right: 10px; }
-    
+body {
+    font-family: 'Fira Code', monospace;
+    padding: 0;
+    margin: 0;
+}
+header {
+    background: #f0f0f0;
+    padding: 20px;
+}
+#container { display: flex; }
+#tree {
+    flex: 0 0 auto;
+    padding: 20px;
+    height: 100%;
+    overflow: auto;
+    font-family: monospace;
+    border-right: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
+}
+#content {
+    flex: 1;
+    width: 75%;
+    padding: 20px;
+}
+.directory {
+    font-weight: bold;
+}
+.current {
+    font-weight: bold;
+    list-style-type: default;
+}
+.highlighted {
+    background-color: #ffffaa;
+    display: block;
+}
+a:hover {
+  font-weight: bold;
+}
+a { color: black }
+#tree a, .normal a { text-decoration: none; }
+#tree li { list-style-type: none; padding-bottom: 2px; }
+.normal a { color: grey; padding-right: 10px; }
