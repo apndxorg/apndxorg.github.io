@@ -1,0 +1,77 @@
+<html><head><title>Deadlock-Free Separation Logic: Linearity Yields Progress for Dependent Higher-Order Message Passing (Artifact)</title><link rel="stylesheet" href="https://apndx.org/pub/icnp/styles.css"><script src="https://apndx.org/pub/icnp/script.js"></script><link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet"></head><body><header><h1>Deadlock-Free Separation Logic: Linearity Yields Progress for Dependent Higher-Order Message Passing (Artifact)</h1><h3>Jules Jacobs, Jonas Kastberg Hinrichsen, Robbert Krebbers</h3></header><div id="container"><div id="tree"><li><a href="README.md.html">README.md</a></li><li><span class="directory">algebra</span><ul><li><a href="multiset.v.html">multiset.v</a></li></ul></li><li><span class="directory">base_logic</span><ul><li><a href="adequacy.v.html">adequacy.v</a></li><li><a href="aprop.v.html">aprop.v</a></li><li><a href="cgraph.v.html">cgraph.v</a></li><li><a href="linpred.v.html">linpred.v</a></li><li><a href="miniprot.v.html">miniprot.v</a></li><li><a href="proofmode.v.html">proofmode.v</a></li><li><a href="uforests.v.html">uforests.v</a></li><li><a href="wp.v.html">wp.v</a></li><li><a href="wp_prim.v.html">wp_prim.v</a></li></ul></li><li><span class="directory">examples</span><ul><li><a href="assert.v.html">assert.v</a></li><li><a href="basics.v.html">basics.v</a></li><li><a href="compare.v.html">compare.v</a></li><li><a href="list_rev.v.html">list_rev.v</a></li><li><a href="llist.v.html">llist.v</a></li><li><a href="sort.v.html">sort.v</a></li><li><a href="sort_br_del.v.html">sort_br_del.v</a></li><li><a href="sort_fg.v.html">sort_fg.v</a></li><li><a href="tour.v.html">tour.v</a></li></ul></li><li><span class="directory">lang</span><ul><li><a href="lang.v.html">lang.v</a></li><li><a href="metatheory.v.html">metatheory.v</a></li><li><a href="notation.v.html">notation.v</a></li></ul></li><li><span class="directory">logrel</span><ul><li><a href="contexts.v.html">contexts.v</a></li><li><span class="directory">examples</span><ul><li><a href="compute_service.v.html">compute_service.v</a></li><li><a href="pair.v.html">pair.v</a></li><li class="current"><a href="rec_subtyping.v.html">rec_subtyping.v</a></li></ul></li><li><a href="model.v.html">model.v</a></li><li><a href="operators.v.html">operators.v</a></li><li><a href="session_types.v.html">session_types.v</a></li><li><a href="session_typing_rules.v.html">session_typing_rules.v</a></li><li><a href="subtyping.v.html">subtyping.v</a></li><li><a href="subtyping_rules.v.html">subtyping_rules.v</a></li><li><a href="telescopes.v.html">telescopes.v</a></li><li><a href="term_types.v.html">term_types.v</a></li><li><a href="term_typing_judgment.v.html">term_typing_judgment.v</a></li><li><a href="term_typing_rules.v.html">term_typing_rules.v</a></li></ul></li><li><span class="directory">prelude</span><ul><li><a href="prelude.v.html">prelude.v</a></li></ul></li><li><span class="directory">session_logic</span><ul><li><a href="imp.v.html">imp.v</a></li><li><a href="proofmode.v.html">proofmode.v</a></li><li><a href="sessions.v.html">sessions.v</a></li><li><a href="sub.v.html">sub.v</a></li><li><a href="tele_imp.v.html">tele_imp.v</a></li></ul></li></div><div id="content"><div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"><a href="#line-1"> 1</a></span>
+<span class="normal"><a href="#line-2"> 2</a></span>
+<span class="normal"><a href="#line-3"> 3</a></span>
+<span class="normal"><a href="#line-4"> 4</a></span>
+<span class="normal"><a href="#line-5"> 5</a></span>
+<span class="normal"><a href="#line-6"> 6</a></span>
+<span class="normal"><a href="#line-7"> 7</a></span>
+<span class="normal"><a href="#line-8"> 8</a></span>
+<span class="normal"><a href="#line-9"> 9</a></span>
+<span class="normal"><a href="#line-10">10</a></span>
+<span class="normal"><a href="#line-11">11</a></span>
+<span class="normal"><a href="#line-12">12</a></span>
+<span class="normal"><a href="#line-13">13</a></span>
+<span class="normal"><a href="#line-14">14</a></span>
+<span class="normal"><a href="#line-15">15</a></span>
+<span class="normal"><a href="#line-16">16</a></span>
+<span class="normal"><a href="#line-17">17</a></span>
+<span class="normal"><a href="#line-18">18</a></span>
+<span class="normal"><a href="#line-19">19</a></span>
+<span class="normal"><a href="#line-20">20</a></span>
+<span class="normal"><a href="#line-21">21</a></span>
+<span class="normal"><a href="#line-22">22</a></span>
+<span class="normal"><a href="#line-23">23</a></span>
+<span class="normal"><a href="#line-24">24</a></span>
+<span class="normal"><a href="#line-25">25</a></span>
+<span class="normal"><a href="#line-26">26</a></span>
+<span class="normal"><a href="#line-27">27</a></span>
+<span class="normal"><a href="#line-28">28</a></span>
+<span class="normal"><a href="#line-29">29</a></span>
+<span class="normal"><a href="#line-30">30</a></span>
+<span class="normal"><a href="#line-31">31</a></span>
+<span class="normal"><a href="#line-32">32</a></span>
+<span class="normal"><a href="#line-33">33</a></span>
+<span class="normal"><a href="#line-34">34</a></span>
+<span class="normal"><a href="#line-35">35</a></span>
+<span class="normal"><a href="#line-36">36</a></span>
+<span class="normal"><a href="#line-37">37</a></span>
+<span class="normal"><a href="#line-38">38</a></span></pre></div></td><td class="code"><div><pre><span></span><span id="linespan-1"><a id="line-1" name="line-1"></a><span class="c">(** This file demonstrates how Löb induction can be used to prove subtyping</span>
+</span><span id="linespan-2"><a id="line-2" name="line-2"></a><span class="c">of recursive protocols that combine polymorphism and asynchronous subtyping.</span>
+</span><span id="linespan-3"><a id="line-3" name="line-3"></a><span class="c">In pseudo syntax, the subtyping we show is:</span>
+</span><span id="linespan-4"><a id="line-4" name="line-4"></a>
+</span><span id="linespan-5"><a id="line-5" name="line-5"></a><span class="c">     μ rec. ! (X,Y:★) (X ⊸ Y). !X. ?Y. rec</span>
+</span><span id="linespan-6"><a id="line-6" name="line-6"></a><span class="c">  &lt;: μ rec. ! (X1,X2:★) (X1 ⊸ bool). !X1. ?bool. !(X2 ⊸ int). !X2. ?int. rec</span>
+</span><span id="linespan-7"><a id="line-7" name="line-7"></a><span class="c">*)</span>
+</span><span id="linespan-8"><a id="line-8" name="line-8"></a><span class="kn">From</span> <span class="n">dlfactris.session_logic</span> <span class="kn">Require</span> <span class="kn">Import</span> <span class="n">proofmode</span><span class="o">.</span>
+</span><span id="linespan-9"><a id="line-9" name="line-9"></a><span class="kn">From</span> <span class="n">dlfactris.logrel</span> <span class="kn">Require</span> <span class="kn">Import</span> <span class="n">subtyping_rules</span><span class="o">.</span>
+</span><span id="linespan-10"><a id="line-10" name="line-10"></a>
+</span><span id="linespan-11"><a id="line-11" name="line-11"></a><span class="kn">Section</span> <span class="n">basics</span><span class="o">.</span>
+</span><span id="linespan-12"><a id="line-12" name="line-12"></a>
+</span><span id="linespan-13"><a id="line-13" name="line-13"></a>  <span class="kn">Definition</span> <span class="n">prot1_aux</span> <span class="o">(</span><span class="n">rec</span> <span class="o">:</span> <span class="n">lsty</span><span class="o">)</span> <span class="o">:</span> <span class="n">lsty</span> <span class="o">:=</span>
+</span><span id="linespan-14"><a id="line-14" name="line-14"></a>    <span class="o">&lt;!!</span> <span class="n">X</span> <span class="n">Y</span><span class="o">&gt;</span> <span class="n">TY</span> <span class="o">(</span><span class="n">X</span> <span class="bp">⊸</span> <span class="n">Y</span><span class="o">);</span> <span class="o">&lt;!!&gt;</span> <span class="n">TY</span> <span class="n">X</span><span class="o">;</span> <span class="o">&lt;??&gt;</span> <span class="n">TY</span> <span class="n">Y</span><span class="o">;</span> <span class="n">rec</span><span class="o">.</span>
+</span><span id="linespan-15"><a id="line-15" name="line-15"></a>  <span class="kn">Instance</span> <span class="n">prot1_aux_contractive</span> <span class="o">:</span> <span class="n">Contractive</span> <span class="n">prot1_aux</span><span class="o">.</span>
+</span><span id="linespan-16"><a id="line-16" name="line-16"></a>  <span class="kn">Proof</span><span class="o">.</span> <span class="n">solve_prot_contractive</span><span class="o">.</span> <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-17"><a id="line-17" name="line-17"></a>  <span class="kn">Definition</span> <span class="n">prot1</span> <span class="o">:=</span> <span class="n">lty_rec</span> <span class="n">prot1_aux</span><span class="o">.</span>
+</span><span id="linespan-18"><a id="line-18" name="line-18"></a>
+</span><span id="linespan-19"><a id="line-19" name="line-19"></a>  <span class="kn">Definition</span> <span class="n">prot2_aux</span> <span class="o">(</span><span class="n">rec</span> <span class="o">:</span> <span class="n">lsty</span><span class="o">)</span> <span class="o">:</span> <span class="n">lsty</span> <span class="o">:=</span>
+</span><span id="linespan-20"><a id="line-20" name="line-20"></a>    <span class="o">&lt;!!</span> <span class="n">X1</span><span class="o">&gt;</span> <span class="n">TY</span> <span class="o">(</span><span class="n">X1</span> <span class="bp">⊸</span> <span class="n">lty_int</span><span class="o">);</span> <span class="o">&lt;!!&gt;</span> <span class="n">TY</span> <span class="n">X1</span><span class="o">;</span> <span class="o">&lt;??&gt;</span> <span class="n">TY</span> <span class="n">lty_int</span><span class="o">;</span>
+</span><span id="linespan-21"><a id="line-21" name="line-21"></a>    <span class="o">&lt;!!</span> <span class="n">X2</span><span class="o">&gt;</span> <span class="n">TY</span> <span class="o">(</span><span class="n">X2</span> <span class="bp">⊸</span> <span class="n">lty_bool</span><span class="o">);</span> <span class="o">&lt;!!&gt;</span> <span class="n">TY</span> <span class="n">X2</span><span class="o">;</span> <span class="o">&lt;??&gt;</span> <span class="n">TY</span> <span class="n">lty_bool</span><span class="o">;</span> <span class="n">rec</span><span class="o">.</span>
+</span><span id="linespan-22"><a id="line-22" name="line-22"></a>  <span class="kn">Instance</span> <span class="n">prot2_aux_contractive</span> <span class="o">:</span> <span class="n">Contractive</span> <span class="n">prot2_aux</span><span class="o">.</span>
+</span><span id="linespan-23"><a id="line-23" name="line-23"></a>  <span class="kn">Proof</span><span class="o">.</span> <span class="n">solve_prot_contractive</span><span class="o">.</span> <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-24"><a id="line-24" name="line-24"></a>  <span class="kn">Definition</span> <span class="n">prot2</span> <span class="o">:=</span> <span class="n">lty_rec</span> <span class="n">prot2_aux</span><span class="o">.</span>
+</span><span id="linespan-25"><a id="line-25" name="line-25"></a>
+</span><span id="linespan-26"><a id="line-26" name="line-26"></a>  <span class="kn">Lemma</span> <span class="n">rec_swap_example</span> <span class="o">:</span> <span class="n">prot1</span> <span class="o">&lt;:</span> <span class="n">prot2</span><span class="o">.</span>
+</span><span id="linespan-27"><a id="line-27" name="line-27"></a>  <span class="kn">Proof</span><span class="o">.</span>
+</span><span id="linespan-28"><a id="line-28" name="line-28"></a>    <span class="n">iLöb</span> <span class="k">as</span> <span class="s2">"IH"</span><span class="o">.</span>
+</span><span id="linespan-29"><a id="line-29" name="line-29"></a>    <span class="n">iDestruct</span> <span class="o">(</span><span class="n">lty_le_rec_unfold</span> <span class="o">(</span><span class="n">prot1_aux</span><span class="o">))</span> <span class="k">as</span> <span class="s2">"[H1 _]"</span><span class="o">.</span>
+</span><span id="linespan-30"><a id="line-30" name="line-30"></a>    <span class="n">iDestruct</span> <span class="o">(</span><span class="n">lty_le_rec_unfold</span> <span class="o">(</span><span class="n">prot2_aux</span><span class="o">))</span> <span class="k">as</span> <span class="s2">"[_ H2]"</span><span class="o">.</span>
+</span><span id="linespan-31"><a id="line-31" name="line-31"></a>    <span class="n">iApply</span> <span class="o">(</span><span class="n">lty_le_trans</span> <span class="k">with</span> <span class="s2">"H1"</span><span class="o">).</span> <span class="n">iApply</span> <span class="o">(</span><span class="n">lty_le_trans</span> <span class="k">with</span> <span class="s2">"[] H2"</span><span class="o">).</span>
+</span><span id="linespan-32"><a id="line-32" name="line-32"></a>    <span class="n">iIntros</span> <span class="o">(</span><span class="n">X</span><span class="o">).</span> <span class="n">iExists</span> <span class="n">X</span><span class="o">,</span> <span class="n">lty_int</span><span class="o">.</span> <span class="n">iIntros</span> <span class="s2">"!&gt;!&gt;!&gt;"</span><span class="o">.</span>
+</span><span id="linespan-33"><a id="line-33" name="line-33"></a>    <span class="n">iApply</span> <span class="o">(</span><span class="n">lty_le_trans</span> <span class="k">with</span> <span class="s2">"H1"</span><span class="o">).</span>
+</span><span id="linespan-34"><a id="line-34" name="line-34"></a>    <span class="n">iIntros</span> <span class="o">(</span><span class="n">X'</span><span class="o">).</span> <span class="n">iExists</span> <span class="n">X'</span><span class="o">,</span> <span class="n">lty_bool</span><span class="o">.</span> <span class="n">iIntros</span> <span class="s2">"!&gt;!&gt;!&gt;"</span><span class="o">.</span>
+</span><span id="linespan-35"><a id="line-35" name="line-35"></a>    <span class="n">iApply</span> <span class="s2">"IH"</span><span class="o">.</span>
+</span><span id="linespan-36"><a id="line-36" name="line-36"></a>  <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-37"><a id="line-37" name="line-37"></a>
+</span><span id="linespan-38"><a id="line-38" name="line-38"></a><span class="kn">End</span> <span class="n">basics</span><span class="o">.</span>
+</span></pre></div></td></tr></table></div>
+</div></div></body></html>

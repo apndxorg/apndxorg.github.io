@@ -1,0 +1,951 @@
+<html><head><title>Deadlock-Free Separation Logic: Linearity Yields Progress for Dependent Higher-Order Message Passing (Artifact)</title><link rel="stylesheet" href="https://apndx.org/pub/icnp/styles.css"><script src="https://apndx.org/pub/icnp/script.js"></script><link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet"></head><body><header><h1>Deadlock-Free Separation Logic: Linearity Yields Progress for Dependent Higher-Order Message Passing (Artifact)</h1><h3>Jules Jacobs, Jonas Kastberg Hinrichsen, Robbert Krebbers</h3></header><div id="container"><div id="tree"><li><a href="README.md.html">README.md</a></li><li><span class="directory">algebra</span><ul><li><a href="multiset.v.html">multiset.v</a></li></ul></li><li><span class="directory">base_logic</span><ul><li><a href="adequacy.v.html">adequacy.v</a></li><li><a href="aprop.v.html">aprop.v</a></li><li><a href="cgraph.v.html">cgraph.v</a></li><li><a href="linpred.v.html">linpred.v</a></li><li><a href="miniprot.v.html">miniprot.v</a></li><li><a href="proofmode.v.html">proofmode.v</a></li><li><a href="uforests.v.html">uforests.v</a></li><li><a href="wp.v.html">wp.v</a></li><li><a href="wp_prim.v.html">wp_prim.v</a></li></ul></li><li><span class="directory">examples</span><ul><li><a href="assert.v.html">assert.v</a></li><li><a href="basics.v.html">basics.v</a></li><li><a href="compare.v.html">compare.v</a></li><li><a href="list_rev.v.html">list_rev.v</a></li><li><a href="llist.v.html">llist.v</a></li><li><a href="sort.v.html">sort.v</a></li><li><a href="sort_br_del.v.html">sort_br_del.v</a></li><li><a href="sort_fg.v.html">sort_fg.v</a></li><li><a href="tour.v.html">tour.v</a></li></ul></li><li><span class="directory">lang</span><ul><li><a href="lang.v.html">lang.v</a></li><li><a href="metatheory.v.html">metatheory.v</a></li><li><a href="notation.v.html">notation.v</a></li></ul></li><li><span class="directory">logrel</span><ul><li><a href="contexts.v.html">contexts.v</a></li><li><span class="directory">examples</span><ul><li><a href="compute_service.v.html">compute_service.v</a></li><li><a href="pair.v.html">pair.v</a></li><li><a href="rec_subtyping.v.html">rec_subtyping.v</a></li></ul></li><li><a href="model.v.html">model.v</a></li><li><a href="operators.v.html">operators.v</a></li><li><a href="session_types.v.html">session_types.v</a></li><li><a href="session_typing_rules.v.html">session_typing_rules.v</a></li><li><a href="subtyping.v.html">subtyping.v</a></li><li><a href="subtyping_rules.v.html">subtyping_rules.v</a></li><li><a href="telescopes.v.html">telescopes.v</a></li><li><a href="term_types.v.html">term_types.v</a></li><li><a href="term_typing_judgment.v.html">term_typing_judgment.v</a></li><li><a href="term_typing_rules.v.html">term_typing_rules.v</a></li></ul></li><li><span class="directory">prelude</span><ul><li><a href="prelude.v.html">prelude.v</a></li></ul></li><li><span class="directory">session_logic</span><ul><li><a href="imp.v.html">imp.v</a></li><li class="current"><a href="proofmode.v.html">proofmode.v</a></li><li><a href="sessions.v.html">sessions.v</a></li><li><a href="sub.v.html">sub.v</a></li><li><a href="tele_imp.v.html">tele_imp.v</a></li></ul></li></div><div id="content"><div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"><a href="#line-1">  1</a></span>
+<span class="normal"><a href="#line-2">  2</a></span>
+<span class="normal"><a href="#line-3">  3</a></span>
+<span class="normal"><a href="#line-4">  4</a></span>
+<span class="normal"><a href="#line-5">  5</a></span>
+<span class="normal"><a href="#line-6">  6</a></span>
+<span class="normal"><a href="#line-7">  7</a></span>
+<span class="normal"><a href="#line-8">  8</a></span>
+<span class="normal"><a href="#line-9">  9</a></span>
+<span class="normal"><a href="#line-10"> 10</a></span>
+<span class="normal"><a href="#line-11"> 11</a></span>
+<span class="normal"><a href="#line-12"> 12</a></span>
+<span class="normal"><a href="#line-13"> 13</a></span>
+<span class="normal"><a href="#line-14"> 14</a></span>
+<span class="normal"><a href="#line-15"> 15</a></span>
+<span class="normal"><a href="#line-16"> 16</a></span>
+<span class="normal"><a href="#line-17"> 17</a></span>
+<span class="normal"><a href="#line-18"> 18</a></span>
+<span class="normal"><a href="#line-19"> 19</a></span>
+<span class="normal"><a href="#line-20"> 20</a></span>
+<span class="normal"><a href="#line-21"> 21</a></span>
+<span class="normal"><a href="#line-22"> 22</a></span>
+<span class="normal"><a href="#line-23"> 23</a></span>
+<span class="normal"><a href="#line-24"> 24</a></span>
+<span class="normal"><a href="#line-25"> 25</a></span>
+<span class="normal"><a href="#line-26"> 26</a></span>
+<span class="normal"><a href="#line-27"> 27</a></span>
+<span class="normal"><a href="#line-28"> 28</a></span>
+<span class="normal"><a href="#line-29"> 29</a></span>
+<span class="normal"><a href="#line-30"> 30</a></span>
+<span class="normal"><a href="#line-31"> 31</a></span>
+<span class="normal"><a href="#line-32"> 32</a></span>
+<span class="normal"><a href="#line-33"> 33</a></span>
+<span class="normal"><a href="#line-34"> 34</a></span>
+<span class="normal"><a href="#line-35"> 35</a></span>
+<span class="normal"><a href="#line-36"> 36</a></span>
+<span class="normal"><a href="#line-37"> 37</a></span>
+<span class="normal"><a href="#line-38"> 38</a></span>
+<span class="normal"><a href="#line-39"> 39</a></span>
+<span class="normal"><a href="#line-40"> 40</a></span>
+<span class="normal"><a href="#line-41"> 41</a></span>
+<span class="normal"><a href="#line-42"> 42</a></span>
+<span class="normal"><a href="#line-43"> 43</a></span>
+<span class="normal"><a href="#line-44"> 44</a></span>
+<span class="normal"><a href="#line-45"> 45</a></span>
+<span class="normal"><a href="#line-46"> 46</a></span>
+<span class="normal"><a href="#line-47"> 47</a></span>
+<span class="normal"><a href="#line-48"> 48</a></span>
+<span class="normal"><a href="#line-49"> 49</a></span>
+<span class="normal"><a href="#line-50"> 50</a></span>
+<span class="normal"><a href="#line-51"> 51</a></span>
+<span class="normal"><a href="#line-52"> 52</a></span>
+<span class="normal"><a href="#line-53"> 53</a></span>
+<span class="normal"><a href="#line-54"> 54</a></span>
+<span class="normal"><a href="#line-55"> 55</a></span>
+<span class="normal"><a href="#line-56"> 56</a></span>
+<span class="normal"><a href="#line-57"> 57</a></span>
+<span class="normal"><a href="#line-58"> 58</a></span>
+<span class="normal"><a href="#line-59"> 59</a></span>
+<span class="normal"><a href="#line-60"> 60</a></span>
+<span class="normal"><a href="#line-61"> 61</a></span>
+<span class="normal"><a href="#line-62"> 62</a></span>
+<span class="normal"><a href="#line-63"> 63</a></span>
+<span class="normal"><a href="#line-64"> 64</a></span>
+<span class="normal"><a href="#line-65"> 65</a></span>
+<span class="normal"><a href="#line-66"> 66</a></span>
+<span class="normal"><a href="#line-67"> 67</a></span>
+<span class="normal"><a href="#line-68"> 68</a></span>
+<span class="normal"><a href="#line-69"> 69</a></span>
+<span class="normal"><a href="#line-70"> 70</a></span>
+<span class="normal"><a href="#line-71"> 71</a></span>
+<span class="normal"><a href="#line-72"> 72</a></span>
+<span class="normal"><a href="#line-73"> 73</a></span>
+<span class="normal"><a href="#line-74"> 74</a></span>
+<span class="normal"><a href="#line-75"> 75</a></span>
+<span class="normal"><a href="#line-76"> 76</a></span>
+<span class="normal"><a href="#line-77"> 77</a></span>
+<span class="normal"><a href="#line-78"> 78</a></span>
+<span class="normal"><a href="#line-79"> 79</a></span>
+<span class="normal"><a href="#line-80"> 80</a></span>
+<span class="normal"><a href="#line-81"> 81</a></span>
+<span class="normal"><a href="#line-82"> 82</a></span>
+<span class="normal"><a href="#line-83"> 83</a></span>
+<span class="normal"><a href="#line-84"> 84</a></span>
+<span class="normal"><a href="#line-85"> 85</a></span>
+<span class="normal"><a href="#line-86"> 86</a></span>
+<span class="normal"><a href="#line-87"> 87</a></span>
+<span class="normal"><a href="#line-88"> 88</a></span>
+<span class="normal"><a href="#line-89"> 89</a></span>
+<span class="normal"><a href="#line-90"> 90</a></span>
+<span class="normal"><a href="#line-91"> 91</a></span>
+<span class="normal"><a href="#line-92"> 92</a></span>
+<span class="normal"><a href="#line-93"> 93</a></span>
+<span class="normal"><a href="#line-94"> 94</a></span>
+<span class="normal"><a href="#line-95"> 95</a></span>
+<span class="normal"><a href="#line-96"> 96</a></span>
+<span class="normal"><a href="#line-97"> 97</a></span>
+<span class="normal"><a href="#line-98"> 98</a></span>
+<span class="normal"><a href="#line-99"> 99</a></span>
+<span class="normal"><a href="#line-100">100</a></span>
+<span class="normal"><a href="#line-101">101</a></span>
+<span class="normal"><a href="#line-102">102</a></span>
+<span class="normal"><a href="#line-103">103</a></span>
+<span class="normal"><a href="#line-104">104</a></span>
+<span class="normal"><a href="#line-105">105</a></span>
+<span class="normal"><a href="#line-106">106</a></span>
+<span class="normal"><a href="#line-107">107</a></span>
+<span class="normal"><a href="#line-108">108</a></span>
+<span class="normal"><a href="#line-109">109</a></span>
+<span class="normal"><a href="#line-110">110</a></span>
+<span class="normal"><a href="#line-111">111</a></span>
+<span class="normal"><a href="#line-112">112</a></span>
+<span class="normal"><a href="#line-113">113</a></span>
+<span class="normal"><a href="#line-114">114</a></span>
+<span class="normal"><a href="#line-115">115</a></span>
+<span class="normal"><a href="#line-116">116</a></span>
+<span class="normal"><a href="#line-117">117</a></span>
+<span class="normal"><a href="#line-118">118</a></span>
+<span class="normal"><a href="#line-119">119</a></span>
+<span class="normal"><a href="#line-120">120</a></span>
+<span class="normal"><a href="#line-121">121</a></span>
+<span class="normal"><a href="#line-122">122</a></span>
+<span class="normal"><a href="#line-123">123</a></span>
+<span class="normal"><a href="#line-124">124</a></span>
+<span class="normal"><a href="#line-125">125</a></span>
+<span class="normal"><a href="#line-126">126</a></span>
+<span class="normal"><a href="#line-127">127</a></span>
+<span class="normal"><a href="#line-128">128</a></span>
+<span class="normal"><a href="#line-129">129</a></span>
+<span class="normal"><a href="#line-130">130</a></span>
+<span class="normal"><a href="#line-131">131</a></span>
+<span class="normal"><a href="#line-132">132</a></span>
+<span class="normal"><a href="#line-133">133</a></span>
+<span class="normal"><a href="#line-134">134</a></span>
+<span class="normal"><a href="#line-135">135</a></span>
+<span class="normal"><a href="#line-136">136</a></span>
+<span class="normal"><a href="#line-137">137</a></span>
+<span class="normal"><a href="#line-138">138</a></span>
+<span class="normal"><a href="#line-139">139</a></span>
+<span class="normal"><a href="#line-140">140</a></span>
+<span class="normal"><a href="#line-141">141</a></span>
+<span class="normal"><a href="#line-142">142</a></span>
+<span class="normal"><a href="#line-143">143</a></span>
+<span class="normal"><a href="#line-144">144</a></span>
+<span class="normal"><a href="#line-145">145</a></span>
+<span class="normal"><a href="#line-146">146</a></span>
+<span class="normal"><a href="#line-147">147</a></span>
+<span class="normal"><a href="#line-148">148</a></span>
+<span class="normal"><a href="#line-149">149</a></span>
+<span class="normal"><a href="#line-150">150</a></span>
+<span class="normal"><a href="#line-151">151</a></span>
+<span class="normal"><a href="#line-152">152</a></span>
+<span class="normal"><a href="#line-153">153</a></span>
+<span class="normal"><a href="#line-154">154</a></span>
+<span class="normal"><a href="#line-155">155</a></span>
+<span class="normal"><a href="#line-156">156</a></span>
+<span class="normal"><a href="#line-157">157</a></span>
+<span class="normal"><a href="#line-158">158</a></span>
+<span class="normal"><a href="#line-159">159</a></span>
+<span class="normal"><a href="#line-160">160</a></span>
+<span class="normal"><a href="#line-161">161</a></span>
+<span class="normal"><a href="#line-162">162</a></span>
+<span class="normal"><a href="#line-163">163</a></span>
+<span class="normal"><a href="#line-164">164</a></span>
+<span class="normal"><a href="#line-165">165</a></span>
+<span class="normal"><a href="#line-166">166</a></span>
+<span class="normal"><a href="#line-167">167</a></span>
+<span class="normal"><a href="#line-168">168</a></span>
+<span class="normal"><a href="#line-169">169</a></span>
+<span class="normal"><a href="#line-170">170</a></span>
+<span class="normal"><a href="#line-171">171</a></span>
+<span class="normal"><a href="#line-172">172</a></span>
+<span class="normal"><a href="#line-173">173</a></span>
+<span class="normal"><a href="#line-174">174</a></span>
+<span class="normal"><a href="#line-175">175</a></span>
+<span class="normal"><a href="#line-176">176</a></span>
+<span class="normal"><a href="#line-177">177</a></span>
+<span class="normal"><a href="#line-178">178</a></span>
+<span class="normal"><a href="#line-179">179</a></span>
+<span class="normal"><a href="#line-180">180</a></span>
+<span class="normal"><a href="#line-181">181</a></span>
+<span class="normal"><a href="#line-182">182</a></span>
+<span class="normal"><a href="#line-183">183</a></span>
+<span class="normal"><a href="#line-184">184</a></span>
+<span class="normal"><a href="#line-185">185</a></span>
+<span class="normal"><a href="#line-186">186</a></span>
+<span class="normal"><a href="#line-187">187</a></span>
+<span class="normal"><a href="#line-188">188</a></span>
+<span class="normal"><a href="#line-189">189</a></span>
+<span class="normal"><a href="#line-190">190</a></span>
+<span class="normal"><a href="#line-191">191</a></span>
+<span class="normal"><a href="#line-192">192</a></span>
+<span class="normal"><a href="#line-193">193</a></span>
+<span class="normal"><a href="#line-194">194</a></span>
+<span class="normal"><a href="#line-195">195</a></span>
+<span class="normal"><a href="#line-196">196</a></span>
+<span class="normal"><a href="#line-197">197</a></span>
+<span class="normal"><a href="#line-198">198</a></span>
+<span class="normal"><a href="#line-199">199</a></span>
+<span class="normal"><a href="#line-200">200</a></span>
+<span class="normal"><a href="#line-201">201</a></span>
+<span class="normal"><a href="#line-202">202</a></span>
+<span class="normal"><a href="#line-203">203</a></span>
+<span class="normal"><a href="#line-204">204</a></span>
+<span class="normal"><a href="#line-205">205</a></span>
+<span class="normal"><a href="#line-206">206</a></span>
+<span class="normal"><a href="#line-207">207</a></span>
+<span class="normal"><a href="#line-208">208</a></span>
+<span class="normal"><a href="#line-209">209</a></span>
+<span class="normal"><a href="#line-210">210</a></span>
+<span class="normal"><a href="#line-211">211</a></span>
+<span class="normal"><a href="#line-212">212</a></span>
+<span class="normal"><a href="#line-213">213</a></span>
+<span class="normal"><a href="#line-214">214</a></span>
+<span class="normal"><a href="#line-215">215</a></span>
+<span class="normal"><a href="#line-216">216</a></span>
+<span class="normal"><a href="#line-217">217</a></span>
+<span class="normal"><a href="#line-218">218</a></span>
+<span class="normal"><a href="#line-219">219</a></span>
+<span class="normal"><a href="#line-220">220</a></span>
+<span class="normal"><a href="#line-221">221</a></span>
+<span class="normal"><a href="#line-222">222</a></span>
+<span class="normal"><a href="#line-223">223</a></span>
+<span class="normal"><a href="#line-224">224</a></span>
+<span class="normal"><a href="#line-225">225</a></span>
+<span class="normal"><a href="#line-226">226</a></span>
+<span class="normal"><a href="#line-227">227</a></span>
+<span class="normal"><a href="#line-228">228</a></span>
+<span class="normal"><a href="#line-229">229</a></span>
+<span class="normal"><a href="#line-230">230</a></span>
+<span class="normal"><a href="#line-231">231</a></span>
+<span class="normal"><a href="#line-232">232</a></span>
+<span class="normal"><a href="#line-233">233</a></span>
+<span class="normal"><a href="#line-234">234</a></span>
+<span class="normal"><a href="#line-235">235</a></span>
+<span class="normal"><a href="#line-236">236</a></span>
+<span class="normal"><a href="#line-237">237</a></span>
+<span class="normal"><a href="#line-238">238</a></span>
+<span class="normal"><a href="#line-239">239</a></span>
+<span class="normal"><a href="#line-240">240</a></span>
+<span class="normal"><a href="#line-241">241</a></span>
+<span class="normal"><a href="#line-242">242</a></span>
+<span class="normal"><a href="#line-243">243</a></span>
+<span class="normal"><a href="#line-244">244</a></span>
+<span class="normal"><a href="#line-245">245</a></span>
+<span class="normal"><a href="#line-246">246</a></span>
+<span class="normal"><a href="#line-247">247</a></span>
+<span class="normal"><a href="#line-248">248</a></span>
+<span class="normal"><a href="#line-249">249</a></span>
+<span class="normal"><a href="#line-250">250</a></span>
+<span class="normal"><a href="#line-251">251</a></span>
+<span class="normal"><a href="#line-252">252</a></span>
+<span class="normal"><a href="#line-253">253</a></span>
+<span class="normal"><a href="#line-254">254</a></span>
+<span class="normal"><a href="#line-255">255</a></span>
+<span class="normal"><a href="#line-256">256</a></span>
+<span class="normal"><a href="#line-257">257</a></span>
+<span class="normal"><a href="#line-258">258</a></span>
+<span class="normal"><a href="#line-259">259</a></span>
+<span class="normal"><a href="#line-260">260</a></span>
+<span class="normal"><a href="#line-261">261</a></span>
+<span class="normal"><a href="#line-262">262</a></span>
+<span class="normal"><a href="#line-263">263</a></span>
+<span class="normal"><a href="#line-264">264</a></span>
+<span class="normal"><a href="#line-265">265</a></span>
+<span class="normal"><a href="#line-266">266</a></span>
+<span class="normal"><a href="#line-267">267</a></span>
+<span class="normal"><a href="#line-268">268</a></span>
+<span class="normal"><a href="#line-269">269</a></span>
+<span class="normal"><a href="#line-270">270</a></span>
+<span class="normal"><a href="#line-271">271</a></span>
+<span class="normal"><a href="#line-272">272</a></span>
+<span class="normal"><a href="#line-273">273</a></span>
+<span class="normal"><a href="#line-274">274</a></span>
+<span class="normal"><a href="#line-275">275</a></span>
+<span class="normal"><a href="#line-276">276</a></span>
+<span class="normal"><a href="#line-277">277</a></span>
+<span class="normal"><a href="#line-278">278</a></span>
+<span class="normal"><a href="#line-279">279</a></span>
+<span class="normal"><a href="#line-280">280</a></span>
+<span class="normal"><a href="#line-281">281</a></span>
+<span class="normal"><a href="#line-282">282</a></span>
+<span class="normal"><a href="#line-283">283</a></span>
+<span class="normal"><a href="#line-284">284</a></span>
+<span class="normal"><a href="#line-285">285</a></span>
+<span class="normal"><a href="#line-286">286</a></span>
+<span class="normal"><a href="#line-287">287</a></span>
+<span class="normal"><a href="#line-288">288</a></span>
+<span class="normal"><a href="#line-289">289</a></span>
+<span class="normal"><a href="#line-290">290</a></span>
+<span class="normal"><a href="#line-291">291</a></span>
+<span class="normal"><a href="#line-292">292</a></span>
+<span class="normal"><a href="#line-293">293</a></span>
+<span class="normal"><a href="#line-294">294</a></span>
+<span class="normal"><a href="#line-295">295</a></span>
+<span class="normal"><a href="#line-296">296</a></span>
+<span class="normal"><a href="#line-297">297</a></span>
+<span class="normal"><a href="#line-298">298</a></span>
+<span class="normal"><a href="#line-299">299</a></span>
+<span class="normal"><a href="#line-300">300</a></span>
+<span class="normal"><a href="#line-301">301</a></span>
+<span class="normal"><a href="#line-302">302</a></span>
+<span class="normal"><a href="#line-303">303</a></span>
+<span class="normal"><a href="#line-304">304</a></span>
+<span class="normal"><a href="#line-305">305</a></span>
+<span class="normal"><a href="#line-306">306</a></span>
+<span class="normal"><a href="#line-307">307</a></span>
+<span class="normal"><a href="#line-308">308</a></span>
+<span class="normal"><a href="#line-309">309</a></span>
+<span class="normal"><a href="#line-310">310</a></span>
+<span class="normal"><a href="#line-311">311</a></span>
+<span class="normal"><a href="#line-312">312</a></span>
+<span class="normal"><a href="#line-313">313</a></span>
+<span class="normal"><a href="#line-314">314</a></span>
+<span class="normal"><a href="#line-315">315</a></span>
+<span class="normal"><a href="#line-316">316</a></span>
+<span class="normal"><a href="#line-317">317</a></span>
+<span class="normal"><a href="#line-318">318</a></span>
+<span class="normal"><a href="#line-319">319</a></span>
+<span class="normal"><a href="#line-320">320</a></span>
+<span class="normal"><a href="#line-321">321</a></span>
+<span class="normal"><a href="#line-322">322</a></span>
+<span class="normal"><a href="#line-323">323</a></span>
+<span class="normal"><a href="#line-324">324</a></span>
+<span class="normal"><a href="#line-325">325</a></span>
+<span class="normal"><a href="#line-326">326</a></span>
+<span class="normal"><a href="#line-327">327</a></span>
+<span class="normal"><a href="#line-328">328</a></span>
+<span class="normal"><a href="#line-329">329</a></span>
+<span class="normal"><a href="#line-330">330</a></span>
+<span class="normal"><a href="#line-331">331</a></span>
+<span class="normal"><a href="#line-332">332</a></span>
+<span class="normal"><a href="#line-333">333</a></span>
+<span class="normal"><a href="#line-334">334</a></span>
+<span class="normal"><a href="#line-335">335</a></span>
+<span class="normal"><a href="#line-336">336</a></span>
+<span class="normal"><a href="#line-337">337</a></span>
+<span class="normal"><a href="#line-338">338</a></span>
+<span class="normal"><a href="#line-339">339</a></span>
+<span class="normal"><a href="#line-340">340</a></span>
+<span class="normal"><a href="#line-341">341</a></span>
+<span class="normal"><a href="#line-342">342</a></span>
+<span class="normal"><a href="#line-343">343</a></span>
+<span class="normal"><a href="#line-344">344</a></span>
+<span class="normal"><a href="#line-345">345</a></span>
+<span class="normal"><a href="#line-346">346</a></span>
+<span class="normal"><a href="#line-347">347</a></span>
+<span class="normal"><a href="#line-348">348</a></span>
+<span class="normal"><a href="#line-349">349</a></span>
+<span class="normal"><a href="#line-350">350</a></span>
+<span class="normal"><a href="#line-351">351</a></span>
+<span class="normal"><a href="#line-352">352</a></span>
+<span class="normal"><a href="#line-353">353</a></span>
+<span class="normal"><a href="#line-354">354</a></span>
+<span class="normal"><a href="#line-355">355</a></span>
+<span class="normal"><a href="#line-356">356</a></span>
+<span class="normal"><a href="#line-357">357</a></span>
+<span class="normal"><a href="#line-358">358</a></span>
+<span class="normal"><a href="#line-359">359</a></span>
+<span class="normal"><a href="#line-360">360</a></span>
+<span class="normal"><a href="#line-361">361</a></span>
+<span class="normal"><a href="#line-362">362</a></span>
+<span class="normal"><a href="#line-363">363</a></span>
+<span class="normal"><a href="#line-364">364</a></span>
+<span class="normal"><a href="#line-365">365</a></span>
+<span class="normal"><a href="#line-366">366</a></span>
+<span class="normal"><a href="#line-367">367</a></span>
+<span class="normal"><a href="#line-368">368</a></span>
+<span class="normal"><a href="#line-369">369</a></span>
+<span class="normal"><a href="#line-370">370</a></span>
+<span class="normal"><a href="#line-371">371</a></span>
+<span class="normal"><a href="#line-372">372</a></span>
+<span class="normal"><a href="#line-373">373</a></span>
+<span class="normal"><a href="#line-374">374</a></span>
+<span class="normal"><a href="#line-375">375</a></span>
+<span class="normal"><a href="#line-376">376</a></span>
+<span class="normal"><a href="#line-377">377</a></span>
+<span class="normal"><a href="#line-378">378</a></span>
+<span class="normal"><a href="#line-379">379</a></span>
+<span class="normal"><a href="#line-380">380</a></span>
+<span class="normal"><a href="#line-381">381</a></span>
+<span class="normal"><a href="#line-382">382</a></span>
+<span class="normal"><a href="#line-383">383</a></span>
+<span class="normal"><a href="#line-384">384</a></span>
+<span class="normal"><a href="#line-385">385</a></span>
+<span class="normal"><a href="#line-386">386</a></span>
+<span class="normal"><a href="#line-387">387</a></span>
+<span class="normal"><a href="#line-388">388</a></span>
+<span class="normal"><a href="#line-389">389</a></span>
+<span class="normal"><a href="#line-390">390</a></span>
+<span class="normal"><a href="#line-391">391</a></span>
+<span class="normal"><a href="#line-392">392</a></span>
+<span class="normal"><a href="#line-393">393</a></span>
+<span class="normal"><a href="#line-394">394</a></span>
+<span class="normal"><a href="#line-395">395</a></span>
+<span class="normal"><a href="#line-396">396</a></span>
+<span class="normal"><a href="#line-397">397</a></span>
+<span class="normal"><a href="#line-398">398</a></span>
+<span class="normal"><a href="#line-399">399</a></span>
+<span class="normal"><a href="#line-400">400</a></span>
+<span class="normal"><a href="#line-401">401</a></span>
+<span class="normal"><a href="#line-402">402</a></span>
+<span class="normal"><a href="#line-403">403</a></span>
+<span class="normal"><a href="#line-404">404</a></span>
+<span class="normal"><a href="#line-405">405</a></span>
+<span class="normal"><a href="#line-406">406</a></span>
+<span class="normal"><a href="#line-407">407</a></span>
+<span class="normal"><a href="#line-408">408</a></span>
+<span class="normal"><a href="#line-409">409</a></span>
+<span class="normal"><a href="#line-410">410</a></span>
+<span class="normal"><a href="#line-411">411</a></span>
+<span class="normal"><a href="#line-412">412</a></span>
+<span class="normal"><a href="#line-413">413</a></span>
+<span class="normal"><a href="#line-414">414</a></span>
+<span class="normal"><a href="#line-415">415</a></span>
+<span class="normal"><a href="#line-416">416</a></span>
+<span class="normal"><a href="#line-417">417</a></span>
+<span class="normal"><a href="#line-418">418</a></span>
+<span class="normal"><a href="#line-419">419</a></span>
+<span class="normal"><a href="#line-420">420</a></span>
+<span class="normal"><a href="#line-421">421</a></span>
+<span class="normal"><a href="#line-422">422</a></span>
+<span class="normal"><a href="#line-423">423</a></span>
+<span class="normal"><a href="#line-424">424</a></span>
+<span class="normal"><a href="#line-425">425</a></span>
+<span class="normal"><a href="#line-426">426</a></span>
+<span class="normal"><a href="#line-427">427</a></span>
+<span class="normal"><a href="#line-428">428</a></span>
+<span class="normal"><a href="#line-429">429</a></span>
+<span class="normal"><a href="#line-430">430</a></span>
+<span class="normal"><a href="#line-431">431</a></span>
+<span class="normal"><a href="#line-432">432</a></span>
+<span class="normal"><a href="#line-433">433</a></span>
+<span class="normal"><a href="#line-434">434</a></span>
+<span class="normal"><a href="#line-435">435</a></span>
+<span class="normal"><a href="#line-436">436</a></span>
+<span class="normal"><a href="#line-437">437</a></span>
+<span class="normal"><a href="#line-438">438</a></span>
+<span class="normal"><a href="#line-439">439</a></span>
+<span class="normal"><a href="#line-440">440</a></span>
+<span class="normal"><a href="#line-441">441</a></span>
+<span class="normal"><a href="#line-442">442</a></span>
+<span class="normal"><a href="#line-443">443</a></span>
+<span class="normal"><a href="#line-444">444</a></span>
+<span class="normal"><a href="#line-445">445</a></span>
+<span class="normal"><a href="#line-446">446</a></span>
+<span class="normal"><a href="#line-447">447</a></span>
+<span class="normal"><a href="#line-448">448</a></span>
+<span class="normal"><a href="#line-449">449</a></span>
+<span class="normal"><a href="#line-450">450</a></span>
+<span class="normal"><a href="#line-451">451</a></span>
+<span class="normal"><a href="#line-452">452</a></span>
+<span class="normal"><a href="#line-453">453</a></span>
+<span class="normal"><a href="#line-454">454</a></span>
+<span class="normal"><a href="#line-455">455</a></span>
+<span class="normal"><a href="#line-456">456</a></span>
+<span class="normal"><a href="#line-457">457</a></span>
+<span class="normal"><a href="#line-458">458</a></span>
+<span class="normal"><a href="#line-459">459</a></span>
+<span class="normal"><a href="#line-460">460</a></span>
+<span class="normal"><a href="#line-461">461</a></span>
+<span class="normal"><a href="#line-462">462</a></span>
+<span class="normal"><a href="#line-463">463</a></span>
+<span class="normal"><a href="#line-464">464</a></span>
+<span class="normal"><a href="#line-465">465</a></span>
+<span class="normal"><a href="#line-466">466</a></span>
+<span class="normal"><a href="#line-467">467</a></span>
+<span class="normal"><a href="#line-468">468</a></span>
+<span class="normal"><a href="#line-469">469</a></span>
+<span class="normal"><a href="#line-470">470</a></span>
+<span class="normal"><a href="#line-471">471</a></span>
+<span class="normal"><a href="#line-472">472</a></span>
+<span class="normal"><a href="#line-473">473</a></span>
+<span class="normal"><a href="#line-474">474</a></span>
+<span class="normal"><a href="#line-475">475</a></span></pre></div></td><td class="code"><div><pre><span></span><span id="linespan-1"><a id="line-1" name="line-1"></a><span class="kn">From</span> <span class="n">dlfactris.session_logic</span> <span class="kn">Require</span> <span class="kn">Export</span> <span class="n">tele_imp</span><span class="o">.</span>
+</span><span id="linespan-2"><a id="line-2" name="line-2"></a><span class="kn">From</span> <span class="n">iris.proofmode</span> <span class="kn">Require</span> <span class="kn">Import</span> <span class="n">coq_tactics</span> <span class="n">reduction</span> <span class="n">spec_patterns</span><span class="o">.</span>
+</span><span id="linespan-3"><a id="line-3" name="line-3"></a><span class="kn">Import</span> <span class="n">TImp</span> <span class="n">TImp.notations</span><span class="o">.</span>
+</span><span id="linespan-4"><a id="line-4" name="line-4"></a>
+</span><span id="linespan-5"><a id="line-5" name="line-5"></a><span class="c">(** Tactics for proving contractiveness of protocols *)</span>
+</span><span id="linespan-6"><a id="line-6" name="line-6"></a><span class="kn">Ltac</span> <span class="n">f_dist_le</span> <span class="o">:=</span>
+</span><span id="linespan-7"><a id="line-7" name="line-7"></a>  <span class="k">match</span> <span class="n">goal</span> <span class="k">with</span>
+</span><span id="linespan-8"><a id="line-8" name="line-8"></a>  <span class="o">|</span> <span class="n">H</span> <span class="o">:</span> <span class="o">_</span> <span class="bp">≡</span><span class="o">{?</span><span class="n">n</span><span class="o">}</span><span class="bp">≡</span> <span class="o">_</span> <span class="o">|-</span> <span class="o">_</span> <span class="bp">≡</span><span class="o">{?</span><span class="n">n'</span><span class="o">}</span><span class="bp">≡</span> <span class="o">_</span> <span class="o">=&gt;</span> <span class="k">apply</span> <span class="o">(</span><span class="n">dist_le</span> <span class="n">n</span><span class="o">);</span> <span class="o">[</span><span class="k">apply</span> <span class="n">H</span><span class="o">|</span><span class="kp">lia</span><span class="o">]</span>
+</span><span id="linespan-9"><a id="line-9" name="line-9"></a>  <span class="k">end</span><span class="o">.</span>
+</span><span id="linespan-10"><a id="line-10" name="line-10"></a>
+</span><span id="linespan-11"><a id="line-11" name="line-11"></a><span class="kn">Ltac</span> <span class="n">solve_prot_contractive</span> <span class="o">:=</span>
+</span><span id="linespan-12"><a id="line-12" name="line-12"></a>  <span class="n">solve_proper_core</span> <span class="n">ltac</span><span class="o">:(</span><span class="k">fun</span> <span class="o">_</span> <span class="o">=&gt;</span>
+</span><span id="linespan-13"><a id="line-13" name="line-13"></a>    <span class="kr">first</span> <span class="o">[</span><span class="n">f_contractive</span><span class="o">;</span> <span class="k">simpl</span> <span class="k">in</span> <span class="o">*</span> <span class="o">|</span> <span class="n">f_equiv</span> <span class="o">|</span> <span class="n">f_dist_le</span><span class="o">]).</span>
+</span><span id="linespan-14"><a id="line-14" name="line-14"></a>
+</span><span id="linespan-15"><a id="line-15" name="line-15"></a><span class="c">(** Let [auto] use reflexivity of subprot *)</span>
+</span><span id="linespan-16"><a id="line-16" name="line-16"></a><span class="kn">Global</span> <span class="kn">Hint</span> <span class="n">Extern</span> <span class="mi">0</span> <span class="o">(</span><span class="n">environments.envs_entails</span> <span class="o">_</span> <span class="o">(?</span><span class="n">x</span> <span class="bp">⊑</span> <span class="o">?</span><span class="n">y</span><span class="o">))</span> <span class="o">=&gt;</span>
+</span><span id="linespan-17"><a id="line-17" name="line-17"></a>  <span class="kr">first</span> <span class="o">[</span><span class="n">is_evar</span> <span class="n">x</span><span class="o">;</span> <span class="n">fail</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">is_evar</span> <span class="n">y</span><span class="o">;</span> <span class="n">fail</span> <span class="mi">1</span><span class="o">|</span><span class="n">iApply</span> <span class="n">subprot_refl</span><span class="o">]</span> <span class="o">:</span> <span class="n">core</span><span class="o">.</span>
+</span><span id="linespan-18"><a id="line-18" name="line-18"></a>
+</span><span id="linespan-19"><a id="line-19" name="line-19"></a><span class="c">(** * Normalization of protocols *)</span>
+</span><span id="linespan-20"><a id="line-20" name="line-20"></a><span class="kn">Class</span> <span class="n">ActionDualIf</span> <span class="o">(</span><span class="n">d</span> <span class="o">:</span> <span class="n">bool</span><span class="o">)</span> <span class="o">(</span><span class="n">a1</span> <span class="n">a2</span> <span class="o">:</span> <span class="n">action</span><span class="o">)</span> <span class="o">:=</span>
+</span><span id="linespan-21"><a id="line-21" name="line-21"></a>  <span class="o">{</span> <span class="n">dual_action_if</span> <span class="o">:</span> <span class="n">a2</span> <span class="o">=</span> <span class="k">if</span> <span class="n">d</span> <span class="k">then</span> <span class="n">action_dual</span> <span class="n">a1</span> <span class="k">else</span> <span class="n">a1</span> <span class="o">}.</span>
+</span><span id="linespan-22"><a id="line-22" name="line-22"></a><span class="kn">Global</span> <span class="kn">Hint</span> <span class="n">Mode</span> <span class="n">ActionDualIf</span> <span class="o">!</span> <span class="o">!</span> <span class="o">-</span> <span class="o">:</span> <span class="n">typeclass_instances</span><span class="o">.</span>
+</span><span id="linespan-23"><a id="line-23" name="line-23"></a>
+</span><span id="linespan-24"><a id="line-24" name="line-24"></a><span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">action_dual_if_false</span> <span class="n">a</span> <span class="o">:</span> <span class="n">ActionDualIf</span> <span class="bp">false</span> <span class="n">a</span> <span class="n">a</span><span class="o">.</span>
+</span><span id="linespan-25"><a id="line-25" name="line-25"></a><span class="kn">Proof</span><span class="o">.</span> <span class="kp">by</span> <span class="k">constructor</span><span class="o">.</span> <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-26"><a id="line-26" name="line-26"></a><span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">action_dual_if_true_send</span> <span class="o">:</span> <span class="n">ActionDualIf</span> <span class="bp">true</span> <span class="n">ASend</span> <span class="n">ARecv</span><span class="o">.</span>
+</span><span id="linespan-27"><a id="line-27" name="line-27"></a><span class="kn">Proof</span><span class="o">.</span> <span class="kp">by</span> <span class="k">constructor</span><span class="o">.</span> <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-28"><a id="line-28" name="line-28"></a><span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">action_dual_if_true_recv</span> <span class="o">:</span> <span class="n">ActionDualIf</span> <span class="bp">true</span> <span class="n">ARecv</span> <span class="n">ASend</span><span class="o">.</span>
+</span><span id="linespan-29"><a id="line-29" name="line-29"></a><span class="kn">Proof</span><span class="o">.</span> <span class="kp">by</span> <span class="k">constructor</span><span class="o">.</span> <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-30"><a id="line-30" name="line-30"></a>
+</span><span id="linespan-31"><a id="line-31" name="line-31"></a><span class="kn">Class</span> <span class="n">ProtNormalize</span> <span class="o">(</span><span class="n">d</span> <span class="o">:</span> <span class="n">bool</span><span class="o">)</span> <span class="o">(</span><span class="n">p</span> <span class="n">q</span> <span class="o">:</span> <span class="n">aMiniProt</span><span class="o">)</span> <span class="o">:=</span>
+</span><span id="linespan-32"><a id="line-32" name="line-32"></a>  <span class="o">{</span> <span class="n">prot_normalize</span> <span class="o">:</span> <span class="bp">⊢</span> <span class="o">(</span><span class="k">if</span> <span class="n">d</span> <span class="k">then</span> <span class="n">dual</span> <span class="n">p</span> <span class="k">else</span> <span class="n">p</span><span class="o">)</span> <span class="bp">⊑</span> <span class="n">q</span> <span class="o">}.</span>
+</span><span id="linespan-33"><a id="line-33" name="line-33"></a><span class="kn">Global</span> <span class="kn">Hint</span> <span class="n">Mode</span> <span class="n">ProtNormalize</span> <span class="o">!</span> <span class="o">!</span> <span class="o">-</span> <span class="o">:</span> <span class="n">typeclass_instances</span><span class="o">.</span>
+</span><span id="linespan-34"><a id="line-34" name="line-34"></a>
+</span><span id="linespan-35"><a id="line-35" name="line-35"></a><span class="kn">Notation</span> <span class="n">ProtUnfold</span> <span class="n">p1</span> <span class="n">p2</span> <span class="o">:=</span>
+</span><span id="linespan-36"><a id="line-36" name="line-36"></a>  <span class="o">(∀</span> <span class="n">d</span> <span class="n">q</span><span class="o">,</span> <span class="n">ProtNormalize</span> <span class="n">d</span> <span class="n">p2</span> <span class="n">q</span> <span class="o">→</span> <span class="n">ProtNormalize</span> <span class="n">d</span> <span class="n">p1</span> <span class="n">q</span><span class="o">).</span>
+</span><span id="linespan-37"><a id="line-37" name="line-37"></a>
+</span><span id="linespan-38"><a id="line-38" name="line-38"></a><span class="kn">Class</span> <span class="n">MsgNormalize</span> <span class="o">(</span><span class="n">d</span> <span class="o">:</span> <span class="n">bool</span><span class="o">)</span> <span class="o">(</span><span class="n">a</span> <span class="o">:</span> <span class="n">action</span><span class="o">)</span> <span class="o">(</span><span class="n">m1</span> <span class="n">m2</span> <span class="o">:</span> <span class="n">msg</span><span class="o">)</span> <span class="o">:=</span>
+</span><span id="linespan-39"><a id="line-39" name="line-39"></a>  <span class="o">{</span> <span class="n">msg_normalize</span> <span class="o">:</span>
+</span><span id="linespan-40"><a id="line-40" name="line-40"></a>      <span class="n">ProtNormalize</span> <span class="n">d</span> <span class="o">(&lt;</span><span class="n">a</span><span class="o">&gt;</span> <span class="n">m1</span><span class="o">)</span> <span class="o">(&lt;(</span><span class="k">if</span> <span class="n">d</span> <span class="k">then</span> <span class="n">action_dual</span> <span class="n">a</span> <span class="k">else</span> <span class="n">a</span><span class="o">)&gt;</span> <span class="n">m2</span><span class="o">)</span> <span class="o">}.</span>
+</span><span id="linespan-41"><a id="line-41" name="line-41"></a><span class="kn">Global</span> <span class="kn">Hint</span> <span class="n">Mode</span> <span class="n">MsgNormalize</span> <span class="o">!</span> <span class="o">!</span> <span class="o">!</span> <span class="o">-</span> <span class="o">:</span> <span class="n">typeclass_instances</span><span class="o">.</span>
+</span><span id="linespan-42"><a id="line-42" name="line-42"></a>
+</span><span id="linespan-43"><a id="line-43" name="line-43"></a><span class="kn">Class</span> <span class="n">MsgTele</span> <span class="o">{</span><span class="n">TT</span> <span class="o">:</span> <span class="n">tele</span><span class="o">}</span> <span class="o">(</span><span class="n">m</span> <span class="o">:</span> <span class="n">msg</span><span class="o">)</span>
+</span><span id="linespan-44"><a id="line-44" name="line-44"></a>    <span class="o">(</span><span class="n">tv</span> <span class="o">:</span> <span class="n">TT</span> <span class="o">-</span><span class="n">t</span><span class="o">&gt;</span> <span class="n">val</span><span class="o">)</span> <span class="o">(</span><span class="n">tP</span> <span class="o">:</span> <span class="n">TT</span> <span class="o">-</span><span class="n">t</span><span class="o">&gt;</span> <span class="n">aProp</span><span class="o">)</span> <span class="o">(</span><span class="n">tp</span> <span class="o">:</span> <span class="n">TT</span> <span class="o">-</span><span class="n">t</span><span class="o">&gt;</span> <span class="n">aMiniProt</span><span class="o">)</span> <span class="o">:=</span>
+</span><span id="linespan-45"><a id="line-45" name="line-45"></a>  <span class="o">{</span> <span class="n">msg_tele</span> <span class="o">:</span>
+</span><span id="linespan-46"><a id="line-46" name="line-46"></a>     <span class="n">m</span> <span class="bp">≡</span> <span class="o">(∃..</span> <span class="n">x</span><span class="o">,</span> <span class="n">MSG</span> <span class="n">tele_app</span> <span class="n">tv</span> <span class="n">x</span> <span class="o">{{</span> <span class="n">tele_app</span> <span class="n">tP</span> <span class="n">x</span> <span class="o">}};</span> <span class="n">tele_app</span> <span class="n">tp</span> <span class="n">x</span><span class="o">)%</span><span class="n">msg</span> <span class="o">}.</span>
+</span><span id="linespan-47"><a id="line-47" name="line-47"></a><span class="kn">Global</span> <span class="kn">Hint</span> <span class="n">Mode</span> <span class="n">MsgTele</span> <span class="o">-</span> <span class="o">!</span> <span class="o">-</span> <span class="o">-</span> <span class="o">-</span> <span class="o">:</span> <span class="n">typeclass_instances</span><span class="o">.</span>
+</span><span id="linespan-48"><a id="line-48" name="line-48"></a>
+</span><span id="linespan-49"><a id="line-49" name="line-49"></a><span class="kn">Section</span> <span class="n">classes</span><span class="o">.</span>
+</span><span id="linespan-50"><a id="line-50" name="line-50"></a>  <span class="kn">Implicit</span> <span class="kn">Types</span> <span class="n">TT</span> <span class="o">:</span> <span class="n">tele</span><span class="o">.</span>
+</span><span id="linespan-51"><a id="line-51" name="line-51"></a>  <span class="kn">Implicit</span> <span class="kn">Types</span> <span class="n">p</span> <span class="o">:</span> <span class="n">aMiniProt</span><span class="o">.</span>
+</span><span id="linespan-52"><a id="line-52" name="line-52"></a>  <span class="kn">Implicit</span> <span class="kn">Types</span> <span class="n">m</span> <span class="o">:</span> <span class="n">msg</span><span class="o">.</span>
+</span><span id="linespan-53"><a id="line-53" name="line-53"></a>  <span class="kn">Implicit</span> <span class="kn">Types</span> <span class="n">P</span> <span class="o">:</span> <span class="n">aProp</span><span class="o">.</span>
+</span><span id="linespan-54"><a id="line-54" name="line-54"></a>
+</span><span id="linespan-55"><a id="line-55" name="line-55"></a>  <span class="c">(** The instances below make it possible to use the tactics [iIntros],</span>
+</span><span id="linespan-56"><a id="line-56" name="line-56"></a><span class="c">  [iExist], [iSplitL]/[iSplitR], [iFrame] and [iModIntro] on [subprot] goals. *)</span>
+</span><span id="linespan-57"><a id="line-57" name="line-57"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">from_wand_end_recv</span> <span class="n">P</span> <span class="o">:</span>
+</span><span id="linespan-58"><a id="line-58" name="line-58"></a>    <span class="n">TCIf</span> <span class="o">(</span><span class="n">TCEq</span> <span class="n">P</span> <span class="n">emp</span><span class="o">%</span><span class="n">I</span><span class="o">)</span> <span class="n">False</span> <span class="n">TCTrue</span> <span class="o">→</span>
+</span><span id="linespan-59"><a id="line-59" name="line-59"></a>    <span class="n">FromWand</span> <span class="o">(</span><span class="n">END</span><span class="o">?</span> <span class="o">{{</span> <span class="n">P</span> <span class="o">}}</span> <span class="bp">⊑</span> <span class="n">END</span><span class="o">?)</span> <span class="n">P</span> <span class="o">(</span><span class="n">END</span><span class="o">?</span> <span class="bp">⊑</span> <span class="n">END</span><span class="o">?)</span> <span class="o">|</span> <span class="mi">10</span><span class="o">.</span>
+</span><span id="linespan-60"><a id="line-60" name="line-60"></a>  <span class="kn">Proof</span><span class="o">.</span> <span class="k">intros</span> <span class="o">_.</span> <span class="k">rewrite</span> <span class="o">/</span><span class="n">FromWand</span><span class="o">.</span> <span class="n">iApply</span> <span class="n">subprot_end_elim_l</span><span class="o">.</span> <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-61"><a id="line-61" name="line-61"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">from_wand_end_send</span> <span class="n">P</span> <span class="o">:</span>
+</span><span id="linespan-62"><a id="line-62" name="line-62"></a>    <span class="n">TCIf</span> <span class="o">(</span><span class="n">TCEq</span> <span class="n">P</span> <span class="n">emp</span><span class="o">%</span><span class="n">I</span><span class="o">)</span> <span class="n">False</span> <span class="n">TCTrue</span> <span class="o">→</span>
+</span><span id="linespan-63"><a id="line-63" name="line-63"></a>    <span class="n">FromWand</span> <span class="o">(</span><span class="n">END</span><span class="o">!</span> <span class="bp">⊑</span> <span class="n">END</span><span class="o">!</span> <span class="o">{{</span> <span class="n">P</span> <span class="o">}})</span> <span class="n">P</span> <span class="o">(</span><span class="n">END</span><span class="o">!</span> <span class="bp">⊑</span> <span class="n">END</span><span class="o">!)</span> <span class="o">|</span> <span class="mi">11</span><span class="o">.</span>
+</span><span id="linespan-64"><a id="line-64" name="line-64"></a>  <span class="kn">Proof</span><span class="o">.</span> <span class="k">intros</span> <span class="o">_.</span> <span class="k">rewrite</span> <span class="o">/</span><span class="n">FromWand</span><span class="o">.</span> <span class="n">iApply</span> <span class="n">subprot_end_elim_r</span><span class="o">.</span> <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-65"><a id="line-65" name="line-65"></a>
+</span><span id="linespan-66"><a id="line-66" name="line-66"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">frame_end_recv</span> <span class="n">q</span> <span class="n">R</span> <span class="n">P</span> <span class="n">Q1</span> <span class="n">Q2</span> <span class="o">:</span>
+</span><span id="linespan-67"><a id="line-67" name="line-67"></a>    <span class="n">Frame</span> <span class="n">q</span> <span class="n">R</span> <span class="n">Q1</span> <span class="n">Q2</span> <span class="o">→</span>
+</span><span id="linespan-68"><a id="line-68" name="line-68"></a>    <span class="n">Frame</span> <span class="n">q</span> <span class="n">R</span> <span class="o">(</span><span class="n">END</span><span class="o">?</span> <span class="o">{{</span> <span class="n">P</span> <span class="o">}}</span> <span class="bp">⊑</span> <span class="n">END</span><span class="o">?</span> <span class="o">{{</span> <span class="n">Q1</span> <span class="o">}})</span> <span class="o">(</span><span class="n">END</span><span class="o">?</span> <span class="o">{{</span> <span class="n">P</span> <span class="o">}}</span> <span class="bp">⊑</span> <span class="n">END</span><span class="o">?</span> <span class="o">{{</span> <span class="n">Q2</span> <span class="o">}})</span> <span class="o">|</span> <span class="mi">10</span><span class="o">.</span>
+</span><span id="linespan-69"><a id="line-69" name="line-69"></a>  <span class="kn">Proof</span><span class="o">.</span>
+</span><span id="linespan-70"><a id="line-70" name="line-70"></a>    <span class="k">rewrite</span> <span class="o">/</span><span class="n">Frame</span> <span class="o">/=.</span> <span class="n">iIntros</span> <span class="o">(</span><span class="n">HP</span><span class="o">)</span> <span class="s2">"[HR H]"</span><span class="o">.</span>
+</span><span id="linespan-71"><a id="line-71" name="line-71"></a>    <span class="n">iApply</span> <span class="o">(</span><span class="n">subprot_trans</span> <span class="k">with</span> <span class="s2">"H"</span><span class="o">).</span> <span class="n">iApply</span> <span class="n">subprot_end_elim_l</span><span class="o">.</span>
+</span><span id="linespan-72"><a id="line-72" name="line-72"></a>    <span class="n">iIntros</span> <span class="s2">"HQ"</span><span class="o">.</span> <span class="n">iApply</span> <span class="n">subprot_end_intro_r</span><span class="o">.</span> <span class="n">iApply</span> <span class="n">HP</span><span class="o">;</span> <span class="n">iFrame</span><span class="o">.</span>
+</span><span id="linespan-73"><a id="line-73" name="line-73"></a>  <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-74"><a id="line-74" name="line-74"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">frame_end_send</span> <span class="n">q</span> <span class="n">R</span> <span class="n">P1</span> <span class="n">P2</span> <span class="n">Q</span> <span class="o">:</span>
+</span><span id="linespan-75"><a id="line-75" name="line-75"></a>    <span class="n">Frame</span> <span class="n">q</span> <span class="n">R</span> <span class="n">P1</span> <span class="n">P2</span> <span class="o">→</span>
+</span><span id="linespan-76"><a id="line-76" name="line-76"></a>    <span class="n">Frame</span> <span class="n">q</span> <span class="n">R</span> <span class="o">(</span><span class="n">END</span><span class="o">!</span> <span class="o">{{</span> <span class="n">P1</span> <span class="o">}}</span> <span class="bp">⊑</span> <span class="n">END</span><span class="o">!</span> <span class="o">{{</span> <span class="n">Q</span> <span class="o">}})</span> <span class="o">(</span><span class="n">END</span><span class="o">!</span> <span class="o">{{</span> <span class="n">P2</span> <span class="o">}}</span> <span class="bp">⊑</span> <span class="n">END</span><span class="o">!</span> <span class="o">{{</span> <span class="n">Q</span> <span class="o">}})</span> <span class="o">|</span> <span class="mi">10</span><span class="o">.</span>
+</span><span id="linespan-77"><a id="line-77" name="line-77"></a>  <span class="kn">Proof</span><span class="o">.</span>
+</span><span id="linespan-78"><a id="line-78" name="line-78"></a>    <span class="k">rewrite</span> <span class="o">/</span><span class="n">Frame</span> <span class="o">/=.</span> <span class="n">iIntros</span> <span class="o">(</span><span class="n">HP</span><span class="o">)</span> <span class="s2">"[HR H]"</span><span class="o">.</span>
+</span><span id="linespan-79"><a id="line-79" name="line-79"></a>    <span class="n">iApply</span> <span class="o">(</span><span class="n">subprot_trans</span> <span class="k">with</span> <span class="s2">"[HR] H"</span><span class="o">).</span> <span class="n">iApply</span> <span class="n">subprot_end_elim_r</span><span class="o">.</span>
+</span><span id="linespan-80"><a id="line-80" name="line-80"></a>    <span class="n">iIntros</span> <span class="s2">"HQ"</span><span class="o">.</span> <span class="n">iApply</span> <span class="n">subprot_end_intro_l</span><span class="o">.</span> <span class="n">iApply</span> <span class="n">HP</span><span class="o">;</span> <span class="n">iFrame</span><span class="o">.</span>
+</span><span id="linespan-81"><a id="line-81" name="line-81"></a>  <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-82"><a id="line-82" name="line-82"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">from_sep_end_recv</span> <span class="n">P</span> <span class="n">Q</span> <span class="o">:</span>
+</span><span id="linespan-83"><a id="line-83" name="line-83"></a>    <span class="n">FromSep</span> <span class="o">(</span><span class="n">END</span><span class="o">?</span> <span class="o">{{</span> <span class="n">P</span> <span class="o">}}</span> <span class="bp">⊑</span> <span class="n">END</span><span class="o">?</span> <span class="o">{{</span> <span class="n">Q</span> <span class="o">}})</span> <span class="n">Q</span> <span class="o">(</span><span class="n">END</span><span class="o">?</span> <span class="o">{{</span> <span class="n">P</span> <span class="o">}}</span> <span class="bp">⊑</span> <span class="n">END</span><span class="o">?)</span> <span class="o">|</span> <span class="mi">11</span><span class="o">.</span>
+</span><span id="linespan-84"><a id="line-84" name="line-84"></a>  <span class="kn">Proof</span><span class="o">.</span> <span class="k">rewrite</span> <span class="o">/</span><span class="n">FromSep</span><span class="o">.</span> <span class="kp">by</span> <span class="n">iIntros</span> <span class="s2">"[$ H]"</span><span class="o">.</span> <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-85"><a id="line-85" name="line-85"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">from_sep_end_send</span> <span class="n">P</span> <span class="n">Q</span> <span class="o">:</span>
+</span><span id="linespan-86"><a id="line-86" name="line-86"></a>    <span class="n">FromSep</span> <span class="o">(</span><span class="n">END</span><span class="o">!</span> <span class="o">{{</span> <span class="n">P</span> <span class="o">}}</span> <span class="bp">⊑</span> <span class="n">END</span><span class="o">!</span> <span class="o">{{</span> <span class="n">Q</span> <span class="o">}})</span> <span class="n">P</span> <span class="o">(</span><span class="n">END</span><span class="o">!</span> <span class="bp">⊑</span> <span class="n">END</span><span class="o">!</span> <span class="o">{{</span> <span class="n">Q</span> <span class="o">}})</span> <span class="o">|</span> <span class="mi">10</span><span class="o">.</span>
+</span><span id="linespan-87"><a id="line-87" name="line-87"></a>  <span class="kn">Proof</span><span class="o">.</span> <span class="k">rewrite</span> <span class="o">/</span><span class="n">FromSep</span><span class="o">.</span> <span class="kp">by</span> <span class="n">iIntros</span> <span class="s2">"[$ H]"</span><span class="o">.</span> <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-88"><a id="line-88" name="line-88"></a>
+</span><span id="linespan-89"><a id="line-89" name="line-89"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">from_forall_recv</span> <span class="o">{</span><span class="n">A</span><span class="o">}</span> <span class="o">(</span><span class="n">m1</span> <span class="o">:</span> <span class="n">A</span> <span class="o">→</span> <span class="n">msg</span><span class="o">)</span> <span class="n">m2</span> <span class="n">name</span> <span class="o">:</span>
+</span><span id="linespan-90"><a id="line-90" name="line-90"></a>    <span class="n">AsIdentName</span> <span class="n">m1</span> <span class="n">name</span> <span class="o">→</span>
+</span><span id="linespan-91"><a id="line-91" name="line-91"></a>    <span class="n">FromForall</span> <span class="o">(</span><span class="n">msg_prot</span> <span class="n">ARecv</span> <span class="o">(</span><span class="n">msg_exist</span> <span class="n">m1</span><span class="o">)</span> <span class="bp">⊑</span> <span class="o">(&lt;?&gt;</span> <span class="n">m2</span><span class="o">))</span>
+</span><span id="linespan-92"><a id="line-92" name="line-92"></a>               <span class="o">(λ</span> <span class="n">x</span><span class="o">,</span> <span class="o">(&lt;?&gt;</span> <span class="n">m1</span> <span class="n">x</span><span class="o">)</span> <span class="bp">⊑</span> <span class="o">(&lt;?&gt;</span> <span class="n">m2</span><span class="o">))%</span><span class="n">I</span> <span class="n">name</span> <span class="o">|</span> <span class="mi">10</span><span class="o">.</span>
+</span><span id="linespan-93"><a id="line-93" name="line-93"></a>  <span class="kn">Proof</span><span class="o">.</span> <span class="k">intros</span> <span class="o">_.</span> <span class="k">apply</span> <span class="n">subprot_exist_elim_l</span><span class="o">.</span> <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-94"><a id="line-94" name="line-94"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">rrom_forall_tele_recv</span> <span class="o">{</span><span class="n">TT</span> <span class="o">:</span> <span class="n">tele</span><span class="o">}</span> <span class="o">(</span><span class="n">m1</span> <span class="o">:</span> <span class="n">TT</span> <span class="o">→</span> <span class="n">msg</span><span class="o">)</span> <span class="n">m2</span> <span class="n">name</span> <span class="o">:</span>
+</span><span id="linespan-95"><a id="line-95" name="line-95"></a>    <span class="n">AsIdentName</span> <span class="n">m1</span> <span class="n">name</span> <span class="o">→</span>
+</span><span id="linespan-96"><a id="line-96" name="line-96"></a>    <span class="n">FromForall</span> <span class="o">(</span><span class="n">msg_prot</span> <span class="n">ARecv</span> <span class="o">(</span><span class="n">msg_texist</span> <span class="n">m1</span><span class="o">)</span> <span class="bp">⊑</span> <span class="o">(&lt;?&gt;</span> <span class="n">m2</span><span class="o">))</span>
+</span><span id="linespan-97"><a id="line-97" name="line-97"></a>               <span class="o">(λ</span> <span class="n">x</span><span class="o">,</span> <span class="o">(&lt;?&gt;</span> <span class="n">m1</span> <span class="n">x</span><span class="o">)</span> <span class="bp">⊑</span> <span class="o">(&lt;?&gt;</span> <span class="n">m2</span><span class="o">))%</span><span class="n">I</span> <span class="n">name</span> <span class="o">|</span> <span class="mi">11</span><span class="o">.</span>
+</span><span id="linespan-98"><a id="line-98" name="line-98"></a>  <span class="kn">Proof</span><span class="o">.</span> <span class="k">intros</span> <span class="o">_.</span> <span class="k">apply</span> <span class="n">subprot_texist_elim_l</span><span class="o">.</span> <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-99"><a id="line-99" name="line-99"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">from_forall_send</span> <span class="o">{</span><span class="n">A</span><span class="o">}</span> <span class="n">m1</span> <span class="o">(</span><span class="n">m2</span> <span class="o">:</span> <span class="n">A</span> <span class="o">→</span> <span class="n">msg</span><span class="o">)</span> <span class="n">name</span> <span class="o">:</span>
+</span><span id="linespan-100"><a id="line-100" name="line-100"></a>    <span class="n">AsIdentName</span> <span class="n">m2</span> <span class="n">name</span> <span class="o">→</span>
+</span><span id="linespan-101"><a id="line-101" name="line-101"></a>    <span class="n">FromForall</span> <span class="o">((&lt;!&gt;</span> <span class="n">m1</span><span class="o">)</span> <span class="bp">⊑</span> <span class="n">msg_prot</span> <span class="n">ASend</span> <span class="o">(</span><span class="n">msg_exist</span> <span class="n">m2</span><span class="o">))</span>
+</span><span id="linespan-102"><a id="line-102" name="line-102"></a>               <span class="o">(λ</span> <span class="n">x</span><span class="o">,</span> <span class="o">(&lt;!&gt;</span> <span class="n">m1</span><span class="o">)</span> <span class="bp">⊑</span> <span class="o">(&lt;!&gt;</span> <span class="n">m2</span> <span class="n">x</span><span class="o">))%</span><span class="n">I</span> <span class="n">name</span> <span class="o">|</span> <span class="mi">20</span><span class="o">.</span>
+</span><span id="linespan-103"><a id="line-103" name="line-103"></a>  <span class="kn">Proof</span><span class="o">.</span> <span class="k">intros</span> <span class="o">_.</span> <span class="k">apply</span> <span class="n">subprot_exist_elim_r</span><span class="o">.</span> <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-104"><a id="line-104" name="line-104"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">from_forall_tele_send</span> <span class="o">{</span><span class="n">TT</span> <span class="o">:</span> <span class="n">tele</span><span class="o">}</span> <span class="n">m1</span> <span class="o">(</span><span class="n">m2</span> <span class="o">:</span> <span class="n">TT</span> <span class="o">→</span> <span class="n">msg</span><span class="o">)</span> <span class="n">name</span> <span class="o">:</span>
+</span><span id="linespan-105"><a id="line-105" name="line-105"></a>    <span class="n">AsIdentName</span> <span class="n">m2</span> <span class="n">name</span> <span class="o">→</span>
+</span><span id="linespan-106"><a id="line-106" name="line-106"></a>    <span class="n">FromForall</span> <span class="o">((&lt;!&gt;</span> <span class="n">m1</span><span class="o">)</span> <span class="bp">⊑</span> <span class="n">msg_prot</span> <span class="n">ASend</span> <span class="o">(</span><span class="n">msg_texist</span> <span class="n">m2</span><span class="o">))</span>
+</span><span id="linespan-107"><a id="line-107" name="line-107"></a>               <span class="o">(λ</span> <span class="n">x</span><span class="o">,</span> <span class="o">(&lt;!&gt;</span> <span class="n">m1</span><span class="o">)</span> <span class="bp">⊑</span> <span class="o">(&lt;!&gt;</span> <span class="n">m2</span> <span class="n">x</span><span class="o">))%</span><span class="n">I</span> <span class="n">name</span> <span class="o">|</span> <span class="mi">21</span><span class="o">.</span>
+</span><span id="linespan-108"><a id="line-108" name="line-108"></a>  <span class="kn">Proof</span><span class="o">.</span> <span class="k">intros</span> <span class="o">_.</span> <span class="k">rewrite</span> <span class="o">/</span><span class="n">FromForall</span><span class="o">.</span> <span class="n">iApply</span> <span class="n">subprot_texist_elim_r</span><span class="o">.</span> <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-109"><a id="line-109" name="line-109"></a>
+</span><span id="linespan-110"><a id="line-110" name="line-110"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">from_wand_recv</span> <span class="n">m</span> <span class="n">v</span> <span class="n">P</span> <span class="n">p</span> <span class="o">:</span>
+</span><span id="linespan-111"><a id="line-111" name="line-111"></a>    <span class="n">TCIf</span> <span class="o">(</span><span class="n">TCEq</span> <span class="n">P</span> <span class="n">emp</span><span class="o">%</span><span class="n">I</span><span class="o">)</span> <span class="n">False</span> <span class="n">TCTrue</span> <span class="o">→</span>
+</span><span id="linespan-112"><a id="line-112" name="line-112"></a>    <span class="n">FromWand</span> <span class="o">((&lt;?&gt;</span> <span class="n">MSG</span> <span class="n">v</span> <span class="o">{{</span> <span class="n">P</span> <span class="o">}};</span> <span class="n">p</span><span class="o">)</span> <span class="bp">⊑</span> <span class="o">(&lt;?&gt;</span> <span class="n">m</span><span class="o">))</span> <span class="n">P</span> <span class="o">((&lt;?&gt;</span> <span class="n">MSG</span> <span class="n">v</span><span class="o">;</span> <span class="n">p</span><span class="o">)</span> <span class="bp">⊑</span> <span class="o">(&lt;?&gt;</span> <span class="n">m</span><span class="o">))</span> <span class="o">|</span> <span class="mi">10</span><span class="o">.</span>
+</span><span id="linespan-113"><a id="line-113" name="line-113"></a>  <span class="kn">Proof</span><span class="o">.</span> <span class="k">intros</span> <span class="o">_.</span> <span class="k">apply</span> <span class="n">subprot_payload_elim_l</span><span class="o">.</span> <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-114"><a id="line-114" name="line-114"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">from_wand_send</span> <span class="n">m</span> <span class="n">v</span> <span class="n">P</span> <span class="n">p</span> <span class="o">:</span>
+</span><span id="linespan-115"><a id="line-115" name="line-115"></a>    <span class="n">TCIf</span> <span class="o">(</span><span class="n">TCEq</span> <span class="n">P</span> <span class="n">emp</span><span class="o">%</span><span class="n">I</span><span class="o">)</span> <span class="n">False</span> <span class="n">TCTrue</span> <span class="o">→</span>
+</span><span id="linespan-116"><a id="line-116" name="line-116"></a>    <span class="n">FromWand</span> <span class="o">((&lt;!&gt;</span> <span class="n">m</span><span class="o">)</span> <span class="bp">⊑</span> <span class="o">(&lt;!&gt;</span> <span class="n">MSG</span> <span class="n">v</span> <span class="o">{{</span> <span class="n">P</span> <span class="o">}};</span> <span class="n">p</span><span class="o">))</span> <span class="n">P</span> <span class="o">((&lt;!&gt;</span> <span class="n">m</span><span class="o">)</span> <span class="bp">⊑</span> <span class="o">(&lt;!&gt;</span> <span class="n">MSG</span> <span class="n">v</span><span class="o">;</span> <span class="n">p</span><span class="o">))</span> <span class="o">|</span> <span class="mi">11</span><span class="o">.</span>
+</span><span id="linespan-117"><a id="line-117" name="line-117"></a>  <span class="kn">Proof</span><span class="o">.</span> <span class="k">intros</span> <span class="o">_.</span> <span class="k">apply</span> <span class="n">subprot_payload_elim_r</span><span class="o">.</span> <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-118"><a id="line-118" name="line-118"></a>
+</span><span id="linespan-119"><a id="line-119" name="line-119"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">from_exist_send</span> <span class="o">{</span><span class="n">A</span><span class="o">}</span> <span class="o">(</span><span class="n">m</span> <span class="o">:</span> <span class="n">A</span> <span class="o">→</span> <span class="n">msg</span><span class="o">)</span> <span class="n">p</span> <span class="o">:</span>
+</span><span id="linespan-120"><a id="line-120" name="line-120"></a>    <span class="n">FromExist</span> <span class="o">((&lt;!</span> <span class="n">x</span><span class="o">&gt;</span> <span class="n">m</span> <span class="n">x</span><span class="o">)</span> <span class="bp">⊑</span> <span class="n">p</span><span class="o">)</span> <span class="o">(λ</span> <span class="n">a</span><span class="o">,</span> <span class="o">(&lt;!&gt;</span> <span class="n">m</span> <span class="n">a</span><span class="o">)</span> <span class="bp">⊑</span> <span class="n">p</span><span class="o">)%</span><span class="n">I</span> <span class="o">|</span> <span class="mi">10</span><span class="o">.</span>
+</span><span id="linespan-121"><a id="line-121" name="line-121"></a>  <span class="kn">Proof</span><span class="o">.</span>
+</span><span id="linespan-122"><a id="line-122" name="line-122"></a>    <span class="k">rewrite</span> <span class="o">/</span><span class="n">FromExist</span><span class="o">.</span> <span class="n">iDestruct</span> <span class="mi">1</span> <span class="k">as</span> <span class="o">(</span><span class="n">x</span><span class="o">)</span> <span class="s2">"H"</span><span class="o">.</span>
+</span><span id="linespan-123"><a id="line-123" name="line-123"></a>    <span class="n">iApply</span> <span class="o">(</span><span class="n">subprot_trans</span> <span class="k">with</span> <span class="s2">"[] H"</span><span class="o">).</span> <span class="n">iApply</span> <span class="n">subprot_exist_intro_l</span><span class="o">.</span>
+</span><span id="linespan-124"><a id="line-124" name="line-124"></a>  <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-125"><a id="line-125" name="line-125"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">from_exist_tele_send</span> <span class="o">{</span><span class="n">TT</span> <span class="o">:</span> <span class="n">tele</span><span class="o">}</span> <span class="o">(</span><span class="n">m</span> <span class="o">:</span> <span class="n">TT</span> <span class="o">→</span> <span class="n">msg</span><span class="o">)</span> <span class="n">p</span> <span class="o">:</span>
+</span><span id="linespan-126"><a id="line-126" name="line-126"></a>    <span class="n">FromExist</span> <span class="o">((&lt;!..</span> <span class="n">x</span><span class="o">&gt;</span> <span class="n">m</span> <span class="n">x</span><span class="o">)</span> <span class="bp">⊑</span> <span class="n">p</span><span class="o">)</span> <span class="o">(λ</span> <span class="n">a</span><span class="o">,</span> <span class="o">(&lt;!&gt;</span> <span class="n">m</span> <span class="n">a</span><span class="o">)</span> <span class="bp">⊑</span> <span class="n">p</span><span class="o">)%</span><span class="n">I</span> <span class="o">|</span> <span class="mi">11</span><span class="o">.</span>
+</span><span id="linespan-127"><a id="line-127" name="line-127"></a>  <span class="kn">Proof</span><span class="o">.</span>
+</span><span id="linespan-128"><a id="line-128" name="line-128"></a>    <span class="k">rewrite</span> <span class="o">/</span><span class="n">FromExist</span><span class="o">.</span> <span class="n">iDestruct</span> <span class="mi">1</span> <span class="k">as</span> <span class="o">(</span><span class="n">x</span><span class="o">)</span> <span class="s2">"H"</span><span class="o">.</span>
+</span><span id="linespan-129"><a id="line-129" name="line-129"></a>    <span class="n">iApply</span> <span class="o">(</span><span class="n">subprot_trans</span> <span class="k">with</span> <span class="s2">"[] H"</span><span class="o">).</span> <span class="n">iApply</span> <span class="n">subprot_texist_intro_l</span><span class="o">.</span>
+</span><span id="linespan-130"><a id="line-130" name="line-130"></a>  <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-131"><a id="line-131" name="line-131"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">from_exist_recv</span> <span class="o">{</span><span class="n">A</span><span class="o">}</span> <span class="o">(</span><span class="n">m</span> <span class="o">:</span> <span class="n">A</span> <span class="o">→</span> <span class="n">msg</span><span class="o">)</span> <span class="n">p</span> <span class="o">:</span>
+</span><span id="linespan-132"><a id="line-132" name="line-132"></a>    <span class="n">FromExist</span> <span class="o">(</span><span class="n">p</span> <span class="bp">⊑</span> <span class="o">&lt;?</span> <span class="n">x</span><span class="o">&gt;</span> <span class="n">m</span> <span class="n">x</span><span class="o">)</span> <span class="o">(λ</span> <span class="n">a</span><span class="o">,</span> <span class="n">p</span> <span class="bp">⊑</span> <span class="o">(&lt;?&gt;</span> <span class="n">m</span> <span class="n">a</span><span class="o">))%</span><span class="n">I</span> <span class="o">|</span> <span class="mi">20</span><span class="o">.</span>
+</span><span id="linespan-133"><a id="line-133" name="line-133"></a>  <span class="kn">Proof</span><span class="o">.</span>
+</span><span id="linespan-134"><a id="line-134" name="line-134"></a>    <span class="k">rewrite</span> <span class="o">/</span><span class="n">FromExist</span><span class="o">.</span> <span class="n">iDestruct</span> <span class="mi">1</span> <span class="k">as</span> <span class="o">(</span><span class="n">x</span><span class="o">)</span> <span class="s2">"H"</span><span class="o">.</span>
+</span><span id="linespan-135"><a id="line-135" name="line-135"></a>    <span class="n">iApply</span> <span class="o">(</span><span class="n">subprot_trans</span> <span class="k">with</span> <span class="s2">"H"</span><span class="o">).</span> <span class="n">iApply</span> <span class="n">subprot_exist_intro_r</span><span class="o">.</span>
+</span><span id="linespan-136"><a id="line-136" name="line-136"></a>  <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-137"><a id="line-137" name="line-137"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">from_exist_tele_recv</span> <span class="o">{</span><span class="n">TT</span> <span class="o">:</span> <span class="n">tele</span><span class="o">}</span> <span class="o">(</span><span class="n">m</span> <span class="o">:</span> <span class="n">TT</span> <span class="o">→</span> <span class="n">msg</span><span class="o">)</span> <span class="n">p</span> <span class="o">:</span>
+</span><span id="linespan-138"><a id="line-138" name="line-138"></a>    <span class="n">FromExist</span> <span class="o">(</span><span class="n">p</span> <span class="bp">⊑</span> <span class="o">&lt;?..</span> <span class="n">x</span><span class="o">&gt;</span> <span class="n">m</span> <span class="n">x</span><span class="o">)</span> <span class="o">(λ</span> <span class="n">a</span><span class="o">,</span> <span class="n">p</span> <span class="bp">⊑</span> <span class="o">(&lt;?&gt;</span> <span class="n">m</span> <span class="n">a</span><span class="o">))%</span><span class="n">I</span> <span class="o">|</span> <span class="mi">21</span><span class="o">.</span>
+</span><span id="linespan-139"><a id="line-139" name="line-139"></a>  <span class="kn">Proof</span><span class="o">.</span>
+</span><span id="linespan-140"><a id="line-140" name="line-140"></a>    <span class="k">rewrite</span> <span class="o">/</span><span class="n">FromExist</span><span class="o">.</span> <span class="n">iDestruct</span> <span class="mi">1</span> <span class="k">as</span> <span class="o">(</span><span class="n">x</span><span class="o">)</span> <span class="s2">"H"</span><span class="o">.</span>
+</span><span id="linespan-141"><a id="line-141" name="line-141"></a>    <span class="n">iApply</span> <span class="o">(</span><span class="n">subprot_trans</span> <span class="k">with</span> <span class="s2">"H"</span><span class="o">).</span> <span class="n">iApply</span> <span class="n">subprot_texist_intro_r</span><span class="o">.</span>
+</span><span id="linespan-142"><a id="line-142" name="line-142"></a>  <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-143"><a id="line-143" name="line-143"></a>
+</span><span id="linespan-144"><a id="line-144" name="line-144"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">frame_send</span> <span class="n">q</span> <span class="n">m</span> <span class="n">v</span> <span class="n">R</span> <span class="n">P</span> <span class="n">Q</span> <span class="n">p</span> <span class="o">:</span>
+</span><span id="linespan-145"><a id="line-145" name="line-145"></a>    <span class="n">Frame</span> <span class="n">q</span> <span class="n">R</span> <span class="n">P</span> <span class="n">Q</span> <span class="o">→</span>
+</span><span id="linespan-146"><a id="line-146" name="line-146"></a>    <span class="n">Frame</span> <span class="n">q</span> <span class="n">R</span> <span class="o">((&lt;!&gt;</span> <span class="n">MSG</span> <span class="n">v</span> <span class="o">{{</span> <span class="n">P</span> <span class="o">}};</span> <span class="n">p</span><span class="o">)</span> <span class="bp">⊑</span> <span class="o">(&lt;!&gt;</span> <span class="n">m</span><span class="o">))</span>
+</span><span id="linespan-147"><a id="line-147" name="line-147"></a>              <span class="o">((&lt;!&gt;</span> <span class="n">MSG</span> <span class="n">v</span> <span class="o">{{</span> <span class="n">Q</span> <span class="o">}};</span> <span class="n">p</span><span class="o">)</span> <span class="bp">⊑</span> <span class="o">(&lt;!&gt;</span> <span class="n">m</span><span class="o">))</span> <span class="o">|</span> <span class="mi">10</span><span class="o">.</span>
+</span><span id="linespan-148"><a id="line-148" name="line-148"></a>  <span class="kn">Proof</span><span class="o">.</span>
+</span><span id="linespan-149"><a id="line-149" name="line-149"></a>    <span class="k">rewrite</span> <span class="o">/</span><span class="n">Frame</span> <span class="o">/=.</span> <span class="n">iIntros</span> <span class="o">(</span><span class="n">HP</span><span class="o">)</span> <span class="s2">"[HR H]"</span><span class="o">.</span>
+</span><span id="linespan-150"><a id="line-150" name="line-150"></a>    <span class="n">iApply</span> <span class="o">(</span><span class="n">subprot_trans</span> <span class="k">with</span> <span class="s2">"[HR] H"</span><span class="o">).</span> <span class="n">iApply</span> <span class="n">subprot_payload_elim_r</span><span class="o">.</span>
+</span><span id="linespan-151"><a id="line-151" name="line-151"></a>    <span class="n">iIntros</span> <span class="s2">"HQ"</span><span class="o">.</span> <span class="n">iApply</span> <span class="n">subprot_payload_intro_l</span><span class="o">.</span> <span class="n">iApply</span> <span class="n">HP</span><span class="o">;</span> <span class="n">iFrame</span><span class="o">.</span>
+</span><span id="linespan-152"><a id="line-152" name="line-152"></a>  <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-153"><a id="line-153" name="line-153"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">frame_recv</span> <span class="n">q</span> <span class="n">m</span> <span class="n">v</span> <span class="n">R</span> <span class="n">P</span> <span class="n">Q</span> <span class="n">p</span> <span class="o">:</span>
+</span><span id="linespan-154"><a id="line-154" name="line-154"></a>    <span class="n">Frame</span> <span class="n">q</span> <span class="n">R</span> <span class="n">P</span> <span class="n">Q</span> <span class="o">→</span>
+</span><span id="linespan-155"><a id="line-155" name="line-155"></a>    <span class="n">Frame</span> <span class="n">q</span> <span class="n">R</span> <span class="o">((&lt;?&gt;</span> <span class="n">m</span><span class="o">)</span> <span class="bp">⊑</span> <span class="o">(&lt;?&gt;</span> <span class="n">MSG</span> <span class="n">v</span> <span class="o">{{</span> <span class="n">P</span> <span class="o">}};</span> <span class="n">p</span><span class="o">))</span>
+</span><span id="linespan-156"><a id="line-156" name="line-156"></a>              <span class="o">((&lt;?&gt;</span> <span class="n">m</span><span class="o">)</span> <span class="bp">⊑</span> <span class="o">(&lt;?&gt;</span> <span class="n">MSG</span> <span class="n">v</span> <span class="o">{{</span> <span class="n">Q</span> <span class="o">}};</span> <span class="n">p</span><span class="o">))</span> <span class="o">|</span> <span class="mi">11</span><span class="o">.</span>
+</span><span id="linespan-157"><a id="line-157" name="line-157"></a>  <span class="kn">Proof</span><span class="o">.</span>
+</span><span id="linespan-158"><a id="line-158" name="line-158"></a>    <span class="k">rewrite</span> <span class="o">/</span><span class="n">Frame</span> <span class="o">/=.</span> <span class="n">iIntros</span> <span class="o">(</span><span class="n">HP</span><span class="o">)</span> <span class="s2">"[HR H]"</span><span class="o">.</span>
+</span><span id="linespan-159"><a id="line-159" name="line-159"></a>    <span class="n">iApply</span> <span class="o">(</span><span class="n">subprot_trans</span> <span class="k">with</span> <span class="s2">"H"</span><span class="o">).</span> <span class="n">iApply</span> <span class="n">subprot_payload_elim_l</span><span class="o">.</span>
+</span><span id="linespan-160"><a id="line-160" name="line-160"></a>    <span class="n">iIntros</span> <span class="s2">"HQ"</span><span class="o">.</span> <span class="n">iApply</span> <span class="n">subprot_payload_intro_r</span><span class="o">.</span> <span class="n">iApply</span> <span class="n">HP</span><span class="o">;</span> <span class="n">iFrame</span><span class="o">.</span>
+</span><span id="linespan-161"><a id="line-161" name="line-161"></a>  <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-162"><a id="line-162" name="line-162"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">from_sep_send</span> <span class="n">m</span> <span class="n">v</span> <span class="n">P</span> <span class="n">p</span> <span class="o">:</span>
+</span><span id="linespan-163"><a id="line-163" name="line-163"></a>    <span class="n">FromSep</span> <span class="o">((&lt;!&gt;</span> <span class="n">MSG</span> <span class="n">v</span> <span class="o">{{</span> <span class="n">P</span> <span class="o">}};</span> <span class="n">p</span><span class="o">)</span> <span class="bp">⊑</span> <span class="o">(&lt;!&gt;</span> <span class="n">m</span><span class="o">))</span> <span class="n">P</span> <span class="o">((&lt;!&gt;</span> <span class="n">MSG</span> <span class="n">v</span><span class="o">;</span> <span class="n">p</span><span class="o">)</span> <span class="bp">⊑</span> <span class="o">(&lt;!&gt;</span> <span class="n">m</span><span class="o">))</span> <span class="o">|</span> <span class="mi">10</span><span class="o">.</span>
+</span><span id="linespan-164"><a id="line-164" name="line-164"></a>  <span class="kn">Proof</span><span class="o">.</span> <span class="k">rewrite</span> <span class="o">/</span><span class="n">FromSep</span><span class="o">.</span> <span class="kp">by</span> <span class="n">iIntros</span> <span class="s2">"[$ H]"</span><span class="o">.</span> <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-165"><a id="line-165" name="line-165"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">from_sep_recv</span> <span class="n">m</span> <span class="n">v</span> <span class="n">P</span> <span class="n">p</span> <span class="o">:</span>
+</span><span id="linespan-166"><a id="line-166" name="line-166"></a>    <span class="n">FromSep</span> <span class="o">((&lt;?&gt;</span> <span class="n">m</span><span class="o">)</span> <span class="bp">⊑</span> <span class="o">(&lt;?&gt;</span> <span class="n">MSG</span> <span class="n">v</span> <span class="o">{{</span> <span class="n">P</span> <span class="o">}};</span> <span class="n">p</span><span class="o">))</span> <span class="n">P</span> <span class="o">((&lt;?&gt;</span> <span class="n">m</span><span class="o">)</span> <span class="bp">⊑</span> <span class="o">(&lt;?&gt;</span> <span class="n">MSG</span> <span class="n">v</span><span class="o">;</span> <span class="n">p</span><span class="o">))</span> <span class="o">|</span> <span class="mi">11</span><span class="o">.</span>
+</span><span id="linespan-167"><a id="line-167" name="line-167"></a>  <span class="kn">Proof</span><span class="o">.</span> <span class="k">rewrite</span> <span class="o">/</span><span class="n">FromSep</span><span class="o">.</span> <span class="kp">by</span> <span class="n">iIntros</span> <span class="s2">"[$ H]"</span><span class="o">.</span> <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-168"><a id="line-168" name="line-168"></a>
+</span><span id="linespan-169"><a id="line-169" name="line-169"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">from_modal_msg</span> <span class="n">a</span> <span class="n">v</span> <span class="n">p1</span> <span class="n">p2</span> <span class="o">:</span>
+</span><span id="linespan-170"><a id="line-170" name="line-170"></a>    <span class="n">FromModal</span> <span class="n">True</span> <span class="o">(</span><span class="n">modality_instances.modality_laterN</span> <span class="mi">1</span><span class="o">)</span> <span class="o">(</span><span class="n">p1</span> <span class="bp">⊑</span> <span class="n">p2</span><span class="o">)</span>
+</span><span id="linespan-171"><a id="line-171" name="line-171"></a>              <span class="o">((&lt;</span><span class="n">a</span><span class="o">&gt;</span> <span class="n">MSG</span> <span class="n">v</span><span class="o">;</span> <span class="n">p1</span><span class="o">)</span> <span class="bp">⊑</span> <span class="o">(&lt;</span><span class="n">a</span><span class="o">&gt;</span> <span class="n">MSG</span> <span class="n">v</span><span class="o">;</span> <span class="n">p2</span><span class="o">))</span> <span class="o">(</span><span class="n">p1</span> <span class="bp">⊑</span> <span class="n">p2</span><span class="o">).</span>
+</span><span id="linespan-172"><a id="line-172" name="line-172"></a>  <span class="kn">Proof</span><span class="o">.</span> <span class="k">intros</span> <span class="o">_.</span> <span class="k">apply</span> <span class="n">subprot_base</span><span class="o">.</span> <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-173"><a id="line-173" name="line-173"></a>
+</span><span id="linespan-174"><a id="line-174" name="line-174"></a>  <span class="c">(** Session normalize *)</span>
+</span><span id="linespan-175"><a id="line-175" name="line-175"></a>  <span class="kn">Lemma</span> <span class="n">prot_unfold_eq</span> <span class="n">p1</span> <span class="n">p2</span> <span class="o">:</span> <span class="n">p1</span> <span class="bp">≡</span> <span class="n">p2</span> <span class="o">→</span> <span class="n">ProtUnfold</span> <span class="n">p1</span> <span class="n">p2</span><span class="o">.</span>
+</span><span id="linespan-176"><a id="line-176" name="line-176"></a>  <span class="kn">Proof</span><span class="o">.</span> <span class="k">intros</span> <span class="n">Hp</span> <span class="n">d</span> <span class="n">q</span> <span class="o">[</span><span class="n">Hq</span><span class="o">];</span> <span class="k">constructor</span><span class="o">.</span> <span class="k">destruct</span> <span class="n">d</span><span class="o">;</span> <span class="kp">by</span> <span class="k">rewrite</span> <span class="n">Hp</span><span class="o">.</span> <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-177"><a id="line-177" name="line-177"></a>
+</span><span id="linespan-178"><a id="line-178" name="line-178"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">prot_normalize_done</span> <span class="n">p</span> <span class="o">:</span> <span class="n">ProtNormalize</span> <span class="bp">false</span> <span class="n">p</span> <span class="n">p</span> <span class="o">|</span> <span class="mi">0</span><span class="o">.</span>
+</span><span id="linespan-179"><a id="line-179" name="line-179"></a>  <span class="kn">Proof</span><span class="o">.</span> <span class="k">constructor</span><span class="o">.</span> <span class="n">iApply</span> <span class="n">subprot_refl</span><span class="o">.</span> <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-180"><a id="line-180" name="line-180"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">prot_normalize_done_dual</span> <span class="n">p</span> <span class="o">:</span> <span class="n">ProtNormalize</span> <span class="bp">true</span> <span class="n">p</span> <span class="o">(</span><span class="n">dual</span> <span class="n">p</span><span class="o">)</span> <span class="o">|</span> <span class="mi">0</span><span class="o">.</span>
+</span><span id="linespan-181"><a id="line-181" name="line-181"></a>  <span class="kn">Proof</span><span class="o">.</span> <span class="k">constructor</span><span class="o">.</span> <span class="n">iApply</span> <span class="n">subprot_refl</span><span class="o">.</span> <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-182"><a id="line-182" name="line-182"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">prot_normalize_done_dual_end</span> <span class="n">d</span> <span class="n">a1</span> <span class="n">a2</span> <span class="n">P</span> <span class="o">:</span>
+</span><span id="linespan-183"><a id="line-183" name="line-183"></a>    <span class="n">ActionDualIf</span> <span class="n">d</span> <span class="n">a1</span> <span class="n">a2</span> <span class="o">→</span>
+</span><span id="linespan-184"><a id="line-184" name="line-184"></a>    <span class="n">ProtNormalize</span> <span class="n">d</span> <span class="o">(</span><span class="n">END</span><span class="o">@</span><span class="n">a1</span> <span class="o">{{</span> <span class="n">P</span> <span class="o">}})</span> <span class="o">(</span><span class="n">END</span><span class="o">@</span><span class="n">a2</span> <span class="o">{{</span> <span class="n">P</span> <span class="o">}})</span> <span class="o">|</span> <span class="mi">0</span><span class="o">.</span>
+</span><span id="linespan-185"><a id="line-185" name="line-185"></a>  <span class="kn">Proof</span><span class="o">.</span> <span class="k">intros</span> <span class="o">[-&gt;].</span> <span class="k">constructor</span><span class="o">.</span> <span class="k">destruct</span> <span class="n">d</span><span class="o">;</span> <span class="k">rewrite</span> <span class="o">?</span><span class="n">dual_end</span><span class="o">;</span> <span class="k">auto</span><span class="o">.</span> <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-186"><a id="line-186" name="line-186"></a>
+</span><span id="linespan-187"><a id="line-187" name="line-187"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">prot_normalize_dual</span> <span class="n">d</span> <span class="n">p</span> <span class="n">q</span> <span class="o">:</span>
+</span><span id="linespan-188"><a id="line-188" name="line-188"></a>    <span class="n">ProtNormalize</span> <span class="o">(</span><span class="n">negb</span> <span class="n">d</span><span class="o">)</span> <span class="n">p</span> <span class="n">q</span> <span class="o">→</span>
+</span><span id="linespan-189"><a id="line-189" name="line-189"></a>    <span class="n">ProtNormalize</span> <span class="n">d</span> <span class="o">(</span><span class="n">dual</span> <span class="n">p</span><span class="o">)</span> <span class="n">q</span><span class="o">.</span>
+</span><span id="linespan-190"><a id="line-190" name="line-190"></a>  <span class="kn">Proof</span><span class="o">.</span> <span class="k">intros</span> <span class="o">[</span><span class="n">Hp</span><span class="o">];</span> <span class="k">constructor</span><span class="o">.</span> <span class="kp">by</span> <span class="k">destruct</span> <span class="n">d</span><span class="o">;</span> <span class="k">rewrite</span> <span class="o">/=</span> <span class="o">?</span><span class="n">dual_dual</span><span class="o">.</span> <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-191"><a id="line-191" name="line-191"></a>
+</span><span id="linespan-192"><a id="line-192" name="line-192"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">msg_normalize_base</span> <span class="n">d</span> <span class="n">a</span> <span class="n">v</span> <span class="n">P</span> <span class="n">p</span> <span class="n">q</span> <span class="o">:</span>
+</span><span id="linespan-193"><a id="line-193" name="line-193"></a>    <span class="n">ProtNormalize</span> <span class="n">d</span> <span class="n">p</span> <span class="n">q</span> <span class="o">→</span>
+</span><span id="linespan-194"><a id="line-194" name="line-194"></a>    <span class="n">MsgNormalize</span> <span class="n">d</span> <span class="n">a</span> <span class="o">(</span><span class="n">MSG</span> <span class="n">v</span> <span class="o">{{</span> <span class="n">P</span> <span class="o">}};</span> <span class="n">p</span><span class="o">)</span> <span class="o">(</span><span class="n">MSG</span> <span class="n">v</span> <span class="o">{{</span> <span class="n">P</span> <span class="o">}};</span> <span class="n">q</span><span class="o">).</span>
+</span><span id="linespan-195"><a id="line-195" name="line-195"></a>  <span class="kn">Proof</span><span class="o">.</span>
+</span><span id="linespan-196"><a id="line-196" name="line-196"></a>    <span class="k">intros</span> <span class="o">[</span><span class="n">Hp</span><span class="o">];</span> <span class="kr">do</span> <span class="mi">2</span> <span class="k">split</span><span class="o">.</span> <span class="n">iApply</span> <span class="n">subprot_trans</span><span class="o">;</span> <span class="o">[|</span><span class="kp">by</span> <span class="n">iApply</span> <span class="n">subprot_base</span><span class="o">].</span>
+</span><span id="linespan-197"><a id="line-197" name="line-197"></a>    <span class="k">destruct</span> <span class="n">d</span><span class="o">;</span> <span class="kp">by</span> <span class="k">rewrite</span> <span class="o">/=</span> <span class="o">?</span><span class="n">dual_msg</span> <span class="o">?</span><span class="n">msg_dual_base</span><span class="o">.</span>
+</span><span id="linespan-198"><a id="line-198" name="line-198"></a>  <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-199"><a id="line-199" name="line-199"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">msg_normalize_exist_base</span> <span class="o">{</span><span class="n">A</span><span class="o">}</span> <span class="n">d</span> <span class="n">a</span> <span class="o">(</span><span class="n">m</span> <span class="o">:</span> <span class="n">A</span> <span class="o">→</span> <span class="n">msg</span><span class="o">)</span>
+</span><span id="linespan-200"><a id="line-200" name="line-200"></a>      <span class="o">(</span><span class="n">v</span> <span class="o">:</span> <span class="n">A</span> <span class="o">→</span> <span class="n">val</span><span class="o">)</span> <span class="o">(</span><span class="n">P</span> <span class="o">:</span> <span class="n">A</span> <span class="o">→</span> <span class="n">aProp</span><span class="o">)</span> <span class="o">(</span><span class="n">q</span> <span class="o">:</span> <span class="n">A</span> <span class="o">→</span> <span class="n">aMiniProt</span><span class="o">)</span> <span class="n">y</span> <span class="n">v'</span> <span class="n">P'</span> <span class="n">q'</span> <span class="o">:</span>
+</span><span id="linespan-201"><a id="line-201" name="line-201"></a>    <span class="n">ActionDualIf</span> <span class="n">d</span> <span class="n">a</span> <span class="n">ASend</span> <span class="o">→</span>
+</span><span id="linespan-202"><a id="line-202" name="line-202"></a>    <span class="o">(∀</span> <span class="n">x</span><span class="o">,</span> <span class="n">MsgNormalize</span> <span class="n">d</span> <span class="n">a</span> <span class="o">(</span><span class="n">m</span> <span class="n">x</span><span class="o">)</span> <span class="o">(</span><span class="n">MSG</span> <span class="n">v</span> <span class="n">x</span> <span class="o">{{</span> <span class="n">P</span> <span class="n">x</span> <span class="o">}};</span> <span class="n">q</span> <span class="n">x</span><span class="o">))</span> <span class="o">→</span>
+</span><span id="linespan-203"><a id="line-203" name="line-203"></a>    <span class="n">TCEq</span> <span class="o">(</span><span class="n">v</span> <span class="n">y</span><span class="o">)</span> <span class="n">v'</span> <span class="o">→</span> <span class="n">TCEq</span> <span class="o">(</span><span class="n">P</span> <span class="n">y</span><span class="o">)</span> <span class="n">P'</span> <span class="o">→</span> <span class="n">TCEq</span> <span class="o">(</span><span class="n">q</span> <span class="n">y</span><span class="o">)</span> <span class="n">q'</span> <span class="o">→</span>
+</span><span id="linespan-204"><a id="line-204" name="line-204"></a>    <span class="n">MsgNormalize</span> <span class="n">d</span> <span class="n">a</span> <span class="o">(∃</span> <span class="n">x</span><span class="o">,</span> <span class="n">m</span> <span class="n">x</span><span class="o">)</span> <span class="o">(</span><span class="n">MSG</span> <span class="n">v'</span> <span class="o">{{</span> <span class="n">P'</span> <span class="o">}};</span> <span class="n">q'</span><span class="o">).</span>
+</span><span id="linespan-205"><a id="line-205" name="line-205"></a>  <span class="kn">Proof</span><span class="o">.</span>
+</span><span id="linespan-206"><a id="line-206" name="line-206"></a>    <span class="k">intros</span> <span class="o">[</span><span class="n">Ha</span><span class="o">]</span> <span class="n">Hpq</span> <span class="o">&lt;-%</span><span class="n">TCEq_eq</span> <span class="o">&lt;-%</span><span class="n">TCEq_eq</span> <span class="o">&lt;-%</span><span class="n">TCEq_eq</span><span class="o">.</span> <span class="kr">do</span> <span class="mi">2</span> <span class="k">split</span><span class="o">.</span>
+</span><span id="linespan-207"><a id="line-207" name="line-207"></a>    <span class="k">destruct</span> <span class="o">(</span><span class="n">Hpq</span> <span class="n">y</span><span class="o">)</span> <span class="k">as</span> <span class="o">[[</span><span class="n">Hm</span><span class="o">]].</span> <span class="k">destruct</span> <span class="n">a</span><span class="o">,</span> <span class="n">d</span><span class="o">;</span> <span class="n">simplify_eq</span><span class="o">/=.</span>
+</span><span id="linespan-208"><a id="line-208" name="line-208"></a>    <span class="o">-</span> <span class="kp">by</span> <span class="n">iExists</span> <span class="n">y</span><span class="o">.</span>
+</span><span id="linespan-209"><a id="line-209" name="line-209"></a>    <span class="o">-</span> <span class="k">rewrite</span> <span class="n">dual_msg</span> <span class="o">/=</span> <span class="n">msg_dual_exist</span><span class="o">.</span> <span class="n">iExists</span> <span class="n">y</span><span class="o">.</span> <span class="kp">by</span> <span class="k">rewrite</span> <span class="n">dual_msg</span> <span class="k">in</span> <span class="n">Hm</span><span class="o">.</span>
+</span><span id="linespan-210"><a id="line-210" name="line-210"></a>  <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-211"><a id="line-211" name="line-211"></a>
+</span><span id="linespan-212"><a id="line-212" name="line-212"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">msg_normalize_exist</span> <span class="o">{</span><span class="n">A</span><span class="o">}</span> <span class="n">d</span> <span class="n">a</span> <span class="o">(</span><span class="n">m1</span> <span class="n">m2</span> <span class="o">:</span> <span class="n">A</span> <span class="o">→</span> <span class="n">msg</span><span class="o">)</span> <span class="o">:</span>
+</span><span id="linespan-213"><a id="line-213" name="line-213"></a>    <span class="o">(∀</span> <span class="n">x</span><span class="o">,</span> <span class="n">MsgNormalize</span> <span class="n">d</span> <span class="n">a</span> <span class="o">(</span><span class="n">m1</span> <span class="n">x</span><span class="o">)</span> <span class="o">(</span><span class="n">m2</span> <span class="n">x</span><span class="o">))</span> <span class="o">→</span>
+</span><span id="linespan-214"><a id="line-214" name="line-214"></a>    <span class="n">MsgNormalize</span> <span class="n">d</span> <span class="n">a</span> <span class="o">(∃</span> <span class="n">x</span><span class="o">,</span> <span class="n">m1</span> <span class="n">x</span><span class="o">)</span> <span class="o">(∃</span> <span class="n">x</span><span class="o">,</span> <span class="n">m2</span> <span class="n">x</span><span class="o">).</span>
+</span><span id="linespan-215"><a id="line-215" name="line-215"></a>  <span class="kn">Proof</span><span class="o">.</span>
+</span><span id="linespan-216"><a id="line-216" name="line-216"></a>    <span class="k">intros</span> <span class="n">Hp</span><span class="o">;</span> <span class="kr">do</span> <span class="mi">2</span> <span class="k">split</span><span class="o">.</span>
+</span><span id="linespan-217"><a id="line-217" name="line-217"></a>    <span class="k">destruct</span> <span class="n">d</span><span class="o">,</span> <span class="n">a</span><span class="o">;</span> <span class="k">simpl</span> <span class="k">in</span> <span class="o">*;</span> <span class="k">rewrite</span> <span class="o">?</span><span class="n">dual_msg</span> <span class="o">?</span><span class="n">msg_dual_exist</span> <span class="o">/=;</span>
+</span><span id="linespan-218"><a id="line-218" name="line-218"></a>      <span class="n">iIntros</span> <span class="o">(</span><span class="n">x</span><span class="o">);</span> <span class="n">iExists</span> <span class="n">x</span><span class="o">;</span> <span class="k">destruct</span> <span class="o">(</span><span class="n">Hp</span> <span class="n">x</span><span class="o">)</span> <span class="k">as</span> <span class="o">[[</span><span class="n">Hpx</span><span class="o">]];</span>
+</span><span id="linespan-219"><a id="line-219" name="line-219"></a>      <span class="k">move</span><span class="o">:</span> <span class="n">Hpx</span><span class="o">;</span> <span class="k">rewrite</span> <span class="o">?</span><span class="n">dual_msg</span><span class="o">;</span> <span class="k">auto</span><span class="o">.</span>
+</span><span id="linespan-220"><a id="line-220" name="line-220"></a>  <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-221"><a id="line-221" name="line-221"></a>
+</span><span id="linespan-222"><a id="line-222" name="line-222"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">msg_tele_base</span> <span class="n">v</span> <span class="n">P</span> <span class="n">p</span> <span class="o">:</span>
+</span><span id="linespan-223"><a id="line-223" name="line-223"></a>    <span class="n">MsgTele</span> <span class="o">(</span><span class="n">TT</span><span class="o">:=</span><span class="n">TeleO</span><span class="o">)</span> <span class="o">(</span><span class="n">MSG</span> <span class="n">v</span> <span class="o">{{</span> <span class="n">P</span> <span class="o">}};</span> <span class="n">p</span><span class="o">)</span> <span class="n">v</span> <span class="n">P</span> <span class="n">p</span><span class="o">.</span>
+</span><span id="linespan-224"><a id="line-224" name="line-224"></a>  <span class="kn">Proof</span><span class="o">.</span> <span class="kp">by</span> <span class="k">constructor</span><span class="o">.</span> <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-225"><a id="line-225" name="line-225"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">msg_tele_exist</span> <span class="o">{</span><span class="n">A</span><span class="o">}</span> <span class="o">{</span><span class="n">TT</span> <span class="o">:</span> <span class="n">A</span> <span class="o">→</span> <span class="n">tele</span><span class="o">}</span> <span class="o">(</span><span class="n">m</span> <span class="o">:</span> <span class="n">A</span> <span class="o">→</span> <span class="n">msg</span><span class="o">)</span> <span class="n">tv</span> <span class="n">tP</span> <span class="n">tp</span> <span class="o">:</span>
+</span><span id="linespan-226"><a id="line-226" name="line-226"></a>    <span class="o">(∀</span> <span class="n">x</span><span class="o">,</span> <span class="n">MsgTele</span> <span class="o">(</span><span class="n">TT</span><span class="o">:=</span><span class="n">TT</span> <span class="n">x</span><span class="o">)</span> <span class="o">(</span><span class="n">m</span> <span class="n">x</span><span class="o">)</span> <span class="o">(</span><span class="n">tv</span> <span class="n">x</span><span class="o">)</span> <span class="o">(</span><span class="n">tP</span> <span class="n">x</span><span class="o">)</span> <span class="o">(</span><span class="n">tp</span> <span class="n">x</span><span class="o">))</span> <span class="o">→</span>
+</span><span id="linespan-227"><a id="line-227" name="line-227"></a>    <span class="n">MsgTele</span> <span class="o">(</span><span class="n">TT</span><span class="o">:=</span><span class="n">TeleS</span> <span class="n">TT</span><span class="o">)</span> <span class="o">(∃</span> <span class="n">x</span><span class="o">,</span> <span class="n">m</span> <span class="n">x</span><span class="o">)</span> <span class="n">tv</span> <span class="n">tP</span> <span class="n">tp</span><span class="o">.</span>
+</span><span id="linespan-228"><a id="line-228" name="line-228"></a>  <span class="kn">Proof</span><span class="o">.</span> <span class="k">intros</span> <span class="n">Hm</span><span class="o">.</span> <span class="k">constructor</span><span class="o">;</span> <span class="k">simpl</span><span class="o">;</span> <span class="n">f_equiv</span><span class="o">=&gt;</span> <span class="n">x</span><span class="o">.</span> <span class="k">apply</span> <span class="n">Hm</span><span class="o">.</span> <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-229"><a id="line-229" name="line-229"></a>
+</span><span id="linespan-230"><a id="line-230" name="line-230"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">msg_normalize_texist</span> <span class="o">{</span><span class="n">TT</span> <span class="o">:</span> <span class="n">tele</span><span class="o">}</span> <span class="n">d</span> <span class="n">a</span> <span class="n">m</span> <span class="o">(</span><span class="n">tv</span> <span class="o">:</span> <span class="n">TT</span> <span class="o">-</span><span class="n">t</span><span class="o">&gt;</span> <span class="o">_)</span> <span class="n">tP</span> <span class="n">tp</span> <span class="n">tq</span> <span class="o">:</span>
+</span><span id="linespan-231"><a id="line-231" name="line-231"></a>    <span class="n">MsgTele</span> <span class="n">m</span> <span class="n">tv</span> <span class="n">tP</span> <span class="n">tp</span> <span class="o">→</span>
+</span><span id="linespan-232"><a id="line-232" name="line-232"></a>    <span class="o">(∀..</span> <span class="n">x</span><span class="o">,</span> <span class="n">ProtNormalize</span> <span class="n">d</span> <span class="o">(</span><span class="n">tele_app</span> <span class="n">tp</span> <span class="n">x</span><span class="o">)</span> <span class="o">(</span><span class="n">tele_app</span> <span class="n">tq</span> <span class="n">x</span><span class="o">))</span> <span class="o">→</span>
+</span><span id="linespan-233"><a id="line-233" name="line-233"></a>    <span class="n">MsgNormalize</span> <span class="n">d</span> <span class="n">a</span> <span class="n">m</span> <span class="o">(∃..</span> <span class="n">x</span> <span class="o">:</span> <span class="n">TT</span><span class="o">,</span> <span class="n">MSG</span> <span class="n">tele_app</span> <span class="n">tv</span> <span class="n">x</span> <span class="o">{{</span> <span class="n">tele_app</span> <span class="n">tP</span> <span class="n">x</span> <span class="o">}};</span> <span class="n">tele_app</span> <span class="n">tq</span> <span class="n">x</span><span class="o">).</span>
+</span><span id="linespan-234"><a id="line-234" name="line-234"></a>  <span class="kn">Proof</span><span class="o">.</span>
+</span><span id="linespan-235"><a id="line-235" name="line-235"></a>    <span class="k">rewrite</span> <span class="n">tforall_forall</span><span class="o">.</span> <span class="k">intros</span> <span class="o">[</span><span class="n">Hm</span><span class="o">]</span> <span class="n">Hpq</span><span class="o">;</span> <span class="kr">do</span> <span class="mi">2</span> <span class="k">split</span><span class="o">.</span>
+</span><span id="linespan-236"><a id="line-236" name="line-236"></a>    <span class="k">destruct</span> <span class="n">d</span><span class="o">;</span> <span class="k">rewrite</span> <span class="o">/=</span> <span class="n">Hm</span> <span class="o">?</span><span class="n">dual_msg</span> <span class="o">?</span><span class="n">msg_dual_base</span> <span class="o">?</span><span class="n">msg_dual_texist</span> <span class="o">{</span><span class="n">Hm</span><span class="o">};</span>
+</span><span id="linespan-237"><a id="line-237" name="line-237"></a>      <span class="k">destruct</span> <span class="n">a</span><span class="o">;</span> <span class="k">simpl</span><span class="o">;</span> <span class="n">iIntros</span> <span class="o">(</span><span class="n">x</span><span class="o">);</span> <span class="n">iExists</span> <span class="n">x</span><span class="o">;</span> <span class="k">rewrite</span> <span class="o">?</span><span class="n">msg_dual_base</span><span class="o">;</span>
+</span><span id="linespan-238"><a id="line-238" name="line-238"></a>      <span class="n">iIntros</span> <span class="s2">"$ !&gt;"</span><span class="o">;</span> <span class="k">destruct</span> <span class="o">(</span><span class="n">Hpq</span> <span class="n">x</span><span class="o">);</span> <span class="k">auto</span><span class="o">.</span>
+</span><span id="linespan-239"><a id="line-239" name="line-239"></a>  <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-240"><a id="line-240" name="line-240"></a>
+</span><span id="linespan-241"><a id="line-241" name="line-241"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">prot_normalize_message</span> <span class="n">d</span> <span class="n">a1</span> <span class="n">a2</span> <span class="n">m1</span> <span class="n">m2</span> <span class="o">:</span>
+</span><span id="linespan-242"><a id="line-242" name="line-242"></a>    <span class="n">ActionDualIf</span> <span class="n">d</span> <span class="n">a1</span> <span class="n">a2</span> <span class="o">→</span>
+</span><span id="linespan-243"><a id="line-243" name="line-243"></a>    <span class="n">MsgNormalize</span> <span class="n">d</span> <span class="n">a1</span> <span class="n">m1</span> <span class="n">m2</span> <span class="o">→</span>
+</span><span id="linespan-244"><a id="line-244" name="line-244"></a>    <span class="n">ProtNormalize</span> <span class="n">d</span> <span class="o">(&lt;</span><span class="n">a1</span><span class="o">&gt;</span> <span class="n">m1</span><span class="o">)</span> <span class="o">(&lt;</span><span class="n">a2</span><span class="o">&gt;</span> <span class="n">m2</span><span class="o">).</span>
+</span><span id="linespan-245"><a id="line-245" name="line-245"></a>  <span class="kn">Proof</span><span class="o">.</span> <span class="kp">by</span> <span class="k">intros</span> <span class="o">[-&gt;]</span> <span class="o">[</span><span class="n">Hm</span><span class="o">].</span> <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-246"><a id="line-246" name="line-246"></a>
+</span><span id="linespan-247"><a id="line-247" name="line-247"></a>  <span class="c">(** Automatically perform normalization of protocols in the proof mode when</span>
+</span><span id="linespan-248"><a id="line-248" name="line-248"></a><span class="c">  using [iAssumption] and [iFrame]. *)</span>
+</span><span id="linespan-249"><a id="line-249" name="line-249"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">from_assumption_own_chan</span> <span class="n">q</span> <span class="n">c</span> <span class="n">p1</span> <span class="n">p2</span> <span class="o">:</span>
+</span><span id="linespan-250"><a id="line-250" name="line-250"></a>    <span class="n">ProtNormalize</span> <span class="bp">false</span> <span class="n">p1</span> <span class="n">p2</span> <span class="o">→</span>
+</span><span id="linespan-251"><a id="line-251" name="line-251"></a>    <span class="n">FromAssumption</span> <span class="n">q</span> <span class="o">(</span><span class="n">c</span> <span class="bp">↣</span> <span class="n">p1</span><span class="o">)</span> <span class="o">(</span><span class="n">c</span> <span class="bp">↣</span> <span class="n">p2</span><span class="o">).</span>
+</span><span id="linespan-252"><a id="line-252" name="line-252"></a>  <span class="kn">Proof</span><span class="o">.</span>
+</span><span id="linespan-253"><a id="line-253" name="line-253"></a>    <span class="k">intros</span> <span class="o">[</span><span class="n">Hp</span><span class="o">].</span> <span class="k">rewrite</span> <span class="o">/</span><span class="n">FromAssumption</span> <span class="n">bi.intuitionistically_if_elim</span><span class="o">.</span>
+</span><span id="linespan-254"><a id="line-254" name="line-254"></a>    <span class="n">iIntros</span> <span class="s2">"H"</span><span class="o">.</span> <span class="kp">by</span> <span class="n">iApply</span> <span class="o">(</span><span class="n">own_chan_subprot</span> <span class="k">with</span> <span class="s2">"H"</span><span class="o">).</span>
+</span><span id="linespan-255"><a id="line-255" name="line-255"></a>  <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-256"><a id="line-256" name="line-256"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">into_wand_own_chan_send</span> <span class="n">q</span> <span class="n">c</span> <span class="n">p1</span> <span class="n">v</span> <span class="n">P</span> <span class="n">p2</span> <span class="n">Q</span> <span class="o">:</span>
+</span><span id="linespan-257"><a id="line-257" name="line-257"></a>    <span class="n">ProtNormalize</span> <span class="bp">false</span> <span class="n">p1</span> <span class="o">(&lt;!&gt;</span> <span class="n">MSG</span> <span class="n">v</span> <span class="o">{{</span> <span class="n">P</span> <span class="o">}};</span> <span class="n">p2</span><span class="o">)</span> <span class="o">→</span>
+</span><span id="linespan-258"><a id="line-258" name="line-258"></a>    <span class="n">FromAssumption</span> <span class="bp">false</span> <span class="n">Q</span> <span class="o">(</span><span class="bp">▷</span> <span class="n">P</span><span class="o">)</span> <span class="o">→</span>
+</span><span id="linespan-259"><a id="line-259" name="line-259"></a>    <span class="n">IntoWand</span> <span class="n">q</span> <span class="bp">false</span> <span class="o">(</span><span class="n">c</span> <span class="bp">↣</span> <span class="n">p1</span><span class="o">)</span> <span class="n">Q</span> <span class="o">(</span><span class="n">c</span> <span class="bp">↣</span> <span class="o">&lt;!&gt;</span> <span class="n">MSG</span> <span class="n">v</span><span class="o">;</span> <span class="n">p2</span><span class="o">).</span>
+</span><span id="linespan-260"><a id="line-260" name="line-260"></a>  <span class="kn">Proof</span><span class="o">.</span>
+</span><span id="linespan-261"><a id="line-261" name="line-261"></a>    <span class="k">intros</span> <span class="o">[</span><span class="n">Hp</span><span class="o">];</span> <span class="k">rewrite</span> <span class="o">/</span><span class="n">FromAssumption</span> <span class="o">/</span><span class="n">IntoWand</span> <span class="o">/=</span> <span class="n">bi.intuitionistically_if_elim</span> <span class="o">/=.</span>
+</span><span id="linespan-262"><a id="line-262" name="line-262"></a>    <span class="n">iIntros</span> <span class="o">(-&gt;)</span> <span class="s2">"H HP"</span><span class="o">.</span> <span class="n">iApply</span> <span class="o">(</span><span class="n">own_chan_subprot</span> <span class="k">with</span> <span class="s2">"H"</span><span class="o">).</span>
+</span><span id="linespan-263"><a id="line-263" name="line-263"></a>    <span class="n">iApply</span> <span class="n">subprot_trans</span><span class="o">;</span> <span class="kr">first</span> <span class="kp">by</span> <span class="n">iApply</span> <span class="n">Hp</span><span class="o">.</span> <span class="n">iFrame</span> <span class="s2">"HP"</span><span class="o">.</span> <span class="k">auto</span><span class="o">.</span>
+</span><span id="linespan-264"><a id="line-264" name="line-264"></a>  <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-265"><a id="line-265" name="line-265"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">into_wand_own_chan_end</span> <span class="n">q</span> <span class="n">c</span> <span class="n">p</span> <span class="n">P</span> <span class="n">Q</span> <span class="o">:</span>
+</span><span id="linespan-266"><a id="line-266" name="line-266"></a>    <span class="n">ProtNormalize</span> <span class="bp">false</span> <span class="n">p</span> <span class="o">(</span><span class="n">END</span><span class="o">!</span> <span class="o">{{</span> <span class="n">P</span> <span class="o">}})</span> <span class="o">→</span>
+</span><span id="linespan-267"><a id="line-267" name="line-267"></a>    <span class="n">FromAssumption</span> <span class="bp">false</span> <span class="n">Q</span> <span class="o">(</span><span class="bp">▷</span> <span class="n">P</span><span class="o">)</span> <span class="o">→</span>
+</span><span id="linespan-268"><a id="line-268" name="line-268"></a>    <span class="n">IntoWand</span> <span class="n">q</span> <span class="bp">false</span> <span class="o">(</span><span class="n">c</span> <span class="bp">↣</span> <span class="n">p</span><span class="o">)</span> <span class="n">Q</span> <span class="o">(</span><span class="n">c</span> <span class="bp">↣</span> <span class="n">END</span><span class="o">!).</span>
+</span><span id="linespan-269"><a id="line-269" name="line-269"></a>  <span class="kn">Proof</span><span class="o">.</span>
+</span><span id="linespan-270"><a id="line-270" name="line-270"></a>    <span class="k">intros</span> <span class="o">[</span><span class="n">Hp</span><span class="o">];</span> <span class="k">rewrite</span> <span class="o">/</span><span class="n">FromAssumption</span> <span class="o">/</span><span class="n">IntoWand</span> <span class="o">/=</span> <span class="n">bi.intuitionistically_if_elim</span> <span class="o">/=.</span>
+</span><span id="linespan-271"><a id="line-271" name="line-271"></a>    <span class="n">iIntros</span> <span class="o">(-&gt;)</span> <span class="s2">"H HP"</span><span class="o">.</span> <span class="n">iApply</span> <span class="o">(</span><span class="n">own_chan_subprot</span> <span class="k">with</span> <span class="s2">"H"</span><span class="o">).</span>
+</span><span id="linespan-272"><a id="line-272" name="line-272"></a>    <span class="n">iApply</span> <span class="n">subprot_trans</span><span class="o">;</span> <span class="kr">first</span> <span class="kp">by</span> <span class="n">iApply</span> <span class="n">Hp</span><span class="o">.</span> <span class="n">iFrame</span> <span class="s2">"HP"</span><span class="o">.</span> <span class="k">auto</span><span class="o">.</span>
+</span><span id="linespan-273"><a id="line-273" name="line-273"></a>  <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-274"><a id="line-274" name="line-274"></a>  <span class="kn">Global</span> <span class="kn">Instance</span> <span class="n">frame_own_chan</span> <span class="n">q</span> <span class="n">c</span> <span class="n">p1</span> <span class="n">p2</span> <span class="o">:</span>
+</span><span id="linespan-275"><a id="line-275" name="line-275"></a>    <span class="n">ProtNormalize</span> <span class="bp">false</span> <span class="n">p1</span> <span class="n">p2</span> <span class="o">→</span>
+</span><span id="linespan-276"><a id="line-276" name="line-276"></a>    <span class="n">Frame</span> <span class="n">q</span> <span class="o">(</span><span class="n">c</span> <span class="bp">↣</span> <span class="n">p1</span><span class="o">)</span> <span class="o">(</span><span class="n">c</span> <span class="bp">↣</span> <span class="n">p2</span><span class="o">)</span> <span class="n">emp</span><span class="o">.</span>
+</span><span id="linespan-277"><a id="line-277" name="line-277"></a>  <span class="kn">Proof</span><span class="o">.</span>
+</span><span id="linespan-278"><a id="line-278" name="line-278"></a>    <span class="k">intros</span> <span class="o">[</span><span class="n">Hp</span><span class="o">].</span> <span class="k">rewrite</span> <span class="o">/</span><span class="n">Frame</span> <span class="n">bi.intuitionistically_if_elim</span><span class="o">.</span>
+</span><span id="linespan-279"><a id="line-279" name="line-279"></a>    <span class="n">iIntros</span> <span class="s2">"[H _]"</span><span class="o">.</span> <span class="kp">by</span> <span class="n">iApply</span> <span class="o">(</span><span class="n">own_chan_subprot</span> <span class="k">with</span> <span class="s2">"H"</span><span class="o">).</span>
+</span><span id="linespan-280"><a id="line-280" name="line-280"></a>  <span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-281"><a id="line-281" name="line-281"></a><span class="kn">End</span> <span class="n">classes</span><span class="o">.</span>
+</span><span id="linespan-282"><a id="line-282" name="line-282"></a>
+</span><span id="linespan-283"><a id="line-283" name="line-283"></a><span class="kn">Lemma</span> <span class="n">tac_wp_recv</span> <span class="o">{</span><span class="n">TT</span> <span class="o">:</span> <span class="n">tele</span><span class="o">}</span> <span class="o">{</span><span class="n">Δ</span> <span class="n">Δ'</span> <span class="n">n</span> <span class="n">k</span> <span class="n">e</span> <span class="n">i</span> <span class="n">c</span> <span class="n">p</span> <span class="n">Φ</span> <span class="n">tv</span> <span class="n">tP</span> <span class="n">tp</span> <span class="n">Q</span><span class="o">}</span> <span class="n">j</span> <span class="o">:</span>
+</span><span id="linespan-284"><a id="line-284" name="line-284"></a>  <span class="n">DoPureStepsIntoCtx</span> <span class="n">e</span> <span class="o">(</span><span class="n">TCEq</span> <span class="o">(</span><span class="n">recv</span> <span class="o">(</span><span class="n">Val</span> <span class="n">c</span><span class="o">)))</span> <span class="n">n</span> <span class="n">k</span> <span class="o">→</span>
+</span><span id="linespan-285"><a id="line-285" name="line-285"></a>  <span class="n">MaybeIntoLaterNEnvs</span> <span class="n">n</span> <span class="n">Δ</span> <span class="n">Δ'</span> <span class="o">→</span> <span class="c">(* we should do one more in the part not containing i *)</span>
+</span><span id="linespan-286"><a id="line-286" name="line-286"></a>  <span class="n">envs_lookup</span> <span class="n">i</span> <span class="n">Δ'</span> <span class="o">=</span> <span class="n">Some</span> <span class="o">(</span><span class="bp">false</span><span class="o">,</span> <span class="n">c</span> <span class="bp">↣</span> <span class="n">p</span><span class="o">)%</span><span class="n">I</span> <span class="o">→</span>
+</span><span id="linespan-287"><a id="line-287" name="line-287"></a>  <span class="n">ProtNormalize</span> <span class="bp">false</span> <span class="n">p</span> <span class="o">(&lt;?..</span> <span class="n">x</span><span class="o">&gt;</span> <span class="n">MSG</span> <span class="n">tv</span> <span class="n">x</span> <span class="o">{{</span> <span class="n">tP</span> <span class="n">x</span> <span class="o">}};</span> <span class="n">tp</span> <span class="n">x</span><span class="o">)</span> <span class="o">→</span>
+</span><span id="linespan-288"><a id="line-288" name="line-288"></a>  <span class="o">(∀..</span> <span class="n">x</span><span class="o">,</span> <span class="n">FinalizeWP</span> <span class="o">(</span><span class="n">k</span> <span class="o">(</span><span class="n">Val</span> <span class="o">(</span><span class="n">tv</span> <span class="n">x</span><span class="o">)))</span> <span class="n">Φ</span> <span class="o">(</span><span class="n">tele_app</span> <span class="n">Q</span> <span class="n">x</span><span class="o">))</span> <span class="o">→</span>
+</span><span id="linespan-289"><a id="line-289" name="line-289"></a>  <span class="k">let</span> <span class="n">Δ''</span> <span class="o">:=</span> <span class="n">envs_delete</span> <span class="bp">false</span> <span class="n">i</span> <span class="bp">false</span> <span class="n">Δ'</span> <span class="k">in</span>
+</span><span id="linespan-290"><a id="line-290" name="line-290"></a>  <span class="o">(∀..</span> <span class="n">x</span> <span class="o">:</span> <span class="n">TT</span><span class="o">,</span>
+</span><span id="linespan-291"><a id="line-291" name="line-291"></a>    <span class="k">match</span> <span class="n">envs_app</span> <span class="bp">false</span> <span class="o">(</span><span class="n">Esnoc</span> <span class="o">(</span><span class="n">Esnoc</span> <span class="n">Enil</span> <span class="n">j</span> <span class="o">(</span><span class="n">tP</span> <span class="n">x</span><span class="o">))</span> <span class="n">i</span> <span class="o">(</span><span class="n">c</span> <span class="bp">↣</span> <span class="n">tp</span> <span class="n">x</span><span class="o">))</span> <span class="n">Δ''</span> <span class="k">with</span>
+</span><span id="linespan-292"><a id="line-292" name="line-292"></a>    <span class="o">|</span> <span class="n">Some</span> <span class="n">Δ'''</span> <span class="o">=&gt;</span> <span class="n">envs_entails</span> <span class="n">Δ'''</span> <span class="o">(</span><span class="n">tele_app</span> <span class="n">Q</span> <span class="n">x</span><span class="o">)</span>
+</span><span id="linespan-293"><a id="line-293" name="line-293"></a>    <span class="o">|</span> <span class="n">None</span> <span class="o">=&gt;</span> <span class="n">False</span>
+</span><span id="linespan-294"><a id="line-294" name="line-294"></a>    <span class="k">end</span><span class="o">)</span> <span class="o">→</span>
+</span><span id="linespan-295"><a id="line-295" name="line-295"></a>  <span class="n">envs_entails</span> <span class="n">Δ</span> <span class="o">(</span><span class="n">WP</span> <span class="n">e</span> <span class="o">{{</span> <span class="n">Φ</span> <span class="o">}}).</span>
+</span><span id="linespan-296"><a id="line-296" name="line-296"></a><span class="kn">Proof</span><span class="o">.</span>
+</span><span id="linespan-297"><a id="line-297" name="line-297"></a>  <span class="k">rewrite</span> <span class="n">envs_entails_unseal</span> <span class="o">/=</span> <span class="o">!</span><span class="n">tforall_forall</span><span class="o">.</span>
+</span><span id="linespan-298"><a id="line-298" name="line-298"></a>  <span class="n">iIntros</span> <span class="o">((</span><span class="n">e'</span><span class="o">&amp;?&amp;&lt;-%</span><span class="n">TCEq_eq</span><span class="o">&amp;</span><span class="n">Hwp</span><span class="o">)%</span><span class="n">do_pure_steps_into_ctx_wp</span> <span class="o">???</span> <span class="n">HQ</span> <span class="n">HΔ''</span><span class="o">)</span> <span class="s2">"HΔ"</span><span class="o">.</span>
+</span><span id="linespan-299"><a id="line-299" name="line-299"></a>  <span class="k">rewrite</span> <span class="n">into_laterN_env_sound</span> <span class="o">/=.</span> <span class="n">iApply</span> <span class="n">Hwp</span><span class="o">;</span> <span class="n">iNext</span><span class="o">.</span>
+</span><span id="linespan-300"><a id="line-300" name="line-300"></a>  <span class="k">rewrite</span> <span class="n">envs_lookup_sound</span> <span class="o">//=.</span> <span class="k">set</span> <span class="o">(</span><span class="n">envs_delete</span> <span class="bp">true</span> <span class="n">i</span> <span class="bp">false</span> <span class="n">Δ'</span><span class="o">)</span> <span class="k">as</span> <span class="n">Δ''</span><span class="o">.</span>
+</span><span id="linespan-301"><a id="line-301" name="line-301"></a>  <span class="n">iDestruct</span> <span class="s2">"HΔ"</span> <span class="k">as</span> <span class="s2">"[Hc HΔ]"</span><span class="o">.</span> <span class="n">iApply</span> <span class="o">(</span><span class="n">wp_recv</span> <span class="k">with</span> <span class="s2">"Hc"</span><span class="o">).</span>
+</span><span id="linespan-302"><a id="line-302" name="line-302"></a>  <span class="n">iIntros</span> <span class="s2">"!&gt; %w (%x &amp; -&gt; &amp; Hc &amp; HP)"</span><span class="o">.</span> <span class="k">destruct</span> <span class="o">(</span><span class="n">HQ</span> <span class="n">x</span><span class="o">)</span> <span class="k">as</span> <span class="o">[</span><span class="n">HQ'</span><span class="o">];</span> <span class="k">clear</span> <span class="n">HQ</span><span class="o">.</span>
+</span><span id="linespan-303"><a id="line-303" name="line-303"></a>  <span class="n">specialize</span> <span class="o">(</span><span class="n">HΔ''</span> <span class="n">x</span><span class="o">).</span> <span class="k">destruct</span> <span class="o">(</span><span class="n">envs_app</span> <span class="o">_</span> <span class="o">_</span> <span class="o">_)</span> <span class="k">as</span> <span class="o">[</span><span class="n">Δ'''</span><span class="o">|]</span> <span class="n">eqn</span><span class="o">:?;</span> <span class="kr">last</span> <span class="kp">done</span><span class="o">.</span>
+</span><span id="linespan-304"><a id="line-304" name="line-304"></a>  <span class="n">iApply</span> <span class="n">HQ'</span><span class="o">.</span> <span class="n">iApply</span> <span class="n">HΔ''</span><span class="o">.</span>
+</span><span id="linespan-305"><a id="line-305" name="line-305"></a>  <span class="n">iApply</span> <span class="o">(</span><span class="n">envs_app_sound</span> <span class="k">with</span> <span class="s2">"[$]"</span><span class="o">);</span> <span class="kr">first</span> <span class="kp">done</span><span class="o">.</span> <span class="kp">by</span> <span class="n">iFrame</span><span class="o">.</span>
+</span><span id="linespan-306"><a id="line-306" name="line-306"></a><span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-307"><a id="line-307" name="line-307"></a>
+</span><span id="linespan-308"><a id="line-308" name="line-308"></a><span class="kn">Lemma</span> <span class="n">tac_wp_send</span> <span class="o">{</span><span class="n">TT</span> <span class="o">:</span> <span class="n">tele</span><span class="o">}</span> <span class="o">{</span><span class="n">Δ</span> <span class="n">Δ'</span> <span class="n">e</span> <span class="n">n</span> <span class="n">k</span> <span class="n">i</span> <span class="n">c</span> <span class="n">v</span> <span class="n">p</span> <span class="n">tv</span> <span class="n">tP</span> <span class="n">tp</span> <span class="n">Φ</span><span class="o">}</span> <span class="n">neg</span> <span class="n">js</span> <span class="o">:</span>
+</span><span id="linespan-309"><a id="line-309" name="line-309"></a>  <span class="n">DoPureStepsIntoCtx</span> <span class="n">e</span> <span class="o">(</span><span class="n">TCEq</span> <span class="o">(</span><span class="n">send</span> <span class="o">(</span><span class="n">Val</span> <span class="n">c</span><span class="o">)</span> <span class="o">(</span><span class="n">Val</span> <span class="n">v</span><span class="o">)))</span> <span class="n">n</span> <span class="n">k</span> <span class="o">→</span>
+</span><span id="linespan-310"><a id="line-310" name="line-310"></a>  <span class="n">MaybeIntoLaterNEnvs</span> <span class="n">n</span> <span class="n">Δ</span> <span class="n">Δ'</span> <span class="o">→</span>
+</span><span id="linespan-311"><a id="line-311" name="line-311"></a>  <span class="n">envs_lookup</span> <span class="n">i</span> <span class="n">Δ'</span> <span class="o">=</span> <span class="n">Some</span> <span class="o">(</span><span class="bp">false</span><span class="o">,</span> <span class="n">c</span> <span class="bp">↣</span> <span class="n">p</span><span class="o">)%</span><span class="n">I</span> <span class="o">→</span>
+</span><span id="linespan-312"><a id="line-312" name="line-312"></a>  <span class="n">ProtNormalize</span> <span class="bp">false</span> <span class="n">p</span> <span class="o">(&lt;!..</span> <span class="n">x</span><span class="o">&gt;</span> <span class="n">MSG</span> <span class="n">tv</span> <span class="n">x</span> <span class="o">{{</span> <span class="n">tP</span> <span class="n">x</span> <span class="o">}};</span> <span class="n">tp</span> <span class="n">x</span><span class="o">)</span> <span class="o">→</span>
+</span><span id="linespan-313"><a id="line-313" name="line-313"></a>  <span class="k">let</span> <span class="n">Δ''</span> <span class="o">:=</span> <span class="n">envs_delete</span> <span class="bp">false</span> <span class="n">i</span> <span class="bp">false</span> <span class="n">Δ'</span> <span class="k">in</span>
+</span><span id="linespan-314"><a id="line-314" name="line-314"></a>  <span class="o">(∃..</span> <span class="n">x</span> <span class="o">:</span> <span class="n">TT</span><span class="o">,</span>
+</span><span id="linespan-315"><a id="line-315" name="line-315"></a>    <span class="k">match</span> <span class="n">envs_split</span> <span class="o">(</span><span class="k">if</span> <span class="n">neg</span> <span class="k">is</span> <span class="bp">true</span> <span class="k">then</span> <span class="n">base.Right</span> <span class="k">else</span> <span class="n">base.Left</span><span class="o">)</span> <span class="n">js</span> <span class="n">Δ''</span> <span class="k">with</span>
+</span><span id="linespan-316"><a id="line-316" name="line-316"></a>    <span class="o">|</span> <span class="n">Some</span> <span class="o">(</span><span class="n">Δ1</span><span class="o">,</span><span class="n">Δ2</span><span class="o">)</span> <span class="o">=&gt;</span>
+</span><span id="linespan-317"><a id="line-317" name="line-317"></a>       <span class="k">match</span> <span class="n">envs_app</span> <span class="bp">false</span> <span class="o">(</span><span class="n">Esnoc</span> <span class="n">Enil</span> <span class="n">i</span> <span class="o">(</span><span class="n">c</span> <span class="bp">↣</span> <span class="n">tp</span> <span class="n">x</span><span class="o">))</span> <span class="n">Δ2</span> <span class="k">with</span>
+</span><span id="linespan-318"><a id="line-318" name="line-318"></a>       <span class="o">|</span> <span class="n">Some</span> <span class="n">Δ2'</span> <span class="o">=&gt;</span>
+</span><span id="linespan-319"><a id="line-319" name="line-319"></a>          <span class="n">v</span> <span class="o">=</span> <span class="n">tv</span> <span class="n">x</span> <span class="o">∧</span>
+</span><span id="linespan-320"><a id="line-320" name="line-320"></a>          <span class="n">envs_entails</span> <span class="n">Δ1</span> <span class="o">(</span><span class="n">tP</span> <span class="n">x</span><span class="o">)</span> <span class="o">∧</span>
+</span><span id="linespan-321"><a id="line-321" name="line-321"></a>          <span class="o">∃</span> <span class="n">Q</span><span class="o">,</span> <span class="n">FinalizeWP</span> <span class="o">(</span><span class="n">k</span> <span class="o">(</span><span class="n">Val</span> <span class="o">#</span><span class="bp">()</span><span class="o">))</span> <span class="n">Φ</span> <span class="n">Q</span> <span class="o">∧</span> <span class="n">envs_entails</span> <span class="n">Δ2'</span> <span class="n">Q</span>
+</span><span id="linespan-322"><a id="line-322" name="line-322"></a>       <span class="o">|</span> <span class="n">None</span> <span class="o">=&gt;</span> <span class="n">False</span>
+</span><span id="linespan-323"><a id="line-323" name="line-323"></a>       <span class="k">end</span>
+</span><span id="linespan-324"><a id="line-324" name="line-324"></a>    <span class="o">|</span> <span class="n">None</span> <span class="o">=&gt;</span> <span class="n">False</span>
+</span><span id="linespan-325"><a id="line-325" name="line-325"></a>    <span class="k">end</span><span class="o">)</span> <span class="o">→</span>
+</span><span id="linespan-326"><a id="line-326" name="line-326"></a>  <span class="n">envs_entails</span> <span class="n">Δ</span> <span class="o">(</span><span class="n">WP</span> <span class="n">e</span> <span class="o">{{</span> <span class="n">Φ</span> <span class="o">}}).</span>
+</span><span id="linespan-327"><a id="line-327" name="line-327"></a><span class="kn">Proof</span><span class="o">.</span>
+</span><span id="linespan-328"><a id="line-328" name="line-328"></a>  <span class="k">rewrite</span> <span class="n">envs_entails_unseal</span> <span class="o">/=</span> <span class="o">!</span><span class="n">texist_exist</span><span class="o">.</span>
+</span><span id="linespan-329"><a id="line-329" name="line-329"></a>  <span class="n">iIntros</span> <span class="o">((</span><span class="n">e'</span><span class="o">&amp;?&amp;&lt;-%</span><span class="n">TCEq_eq</span><span class="o">&amp;</span><span class="n">Hwp</span><span class="o">)%</span><span class="n">do_pure_steps_into_ctx_wp</span> <span class="o">??</span> <span class="o">[</span><span class="n">Hp</span><span class="o">]</span> <span class="o">[</span><span class="n">x</span> <span class="n">HΔ''</span><span class="o">])</span> <span class="s2">"HΔ"</span><span class="o">.</span>
+</span><span id="linespan-330"><a id="line-330" name="line-330"></a>  <span class="k">rewrite</span> <span class="n">into_laterN_env_sound</span> <span class="o">/=.</span> <span class="n">iApply</span> <span class="n">Hwp</span><span class="o">;</span> <span class="n">iNext</span><span class="o">.</span>
+</span><span id="linespan-331"><a id="line-331" name="line-331"></a>  <span class="k">destruct</span> <span class="o">(</span><span class="n">envs_split</span> <span class="o">_</span> <span class="o">_</span> <span class="o">_)</span> <span class="k">as</span> <span class="o">[[</span><span class="n">Δ1</span> <span class="n">Δ2</span><span class="o">]|]</span> <span class="n">eqn</span><span class="o">:?</span> <span class="o">=&gt;</span> <span class="o">//.</span>
+</span><span id="linespan-332"><a id="line-332" name="line-332"></a>  <span class="k">destruct</span> <span class="o">(</span><span class="n">envs_app</span> <span class="o">_</span> <span class="o">_</span> <span class="o">_)</span> <span class="k">as</span> <span class="o">[</span><span class="n">Δ2'</span><span class="o">|]</span> <span class="n">eqn</span><span class="o">:?</span> <span class="o">=&gt;</span> <span class="o">//.</span>
+</span><span id="linespan-333"><a id="line-333" name="line-333"></a>  <span class="k">rewrite</span> <span class="n">envs_lookup_sound</span> <span class="o">//=</span> <span class="n">envs_split_sound</span> <span class="o">//=.</span>
+</span><span id="linespan-334"><a id="line-334" name="line-334"></a>  <span class="k">rewrite</span> <span class="o">(</span><span class="n">envs_app_sound</span> <span class="n">Δ2</span><span class="o">)</span> <span class="o">//;</span> <span class="k">simpl</span><span class="o">.</span> <span class="k">destruct</span> <span class="n">HΔ''</span> <span class="k">as</span> <span class="o">(-&gt;</span> <span class="o">&amp;</span> <span class="o">-&gt;</span> <span class="o">&amp;</span> <span class="n">Q</span> <span class="o">&amp;</span> <span class="o">[</span><span class="n">HQ</span><span class="o">]</span> <span class="o">&amp;</span> <span class="o">-&gt;).</span>
+</span><span id="linespan-335"><a id="line-335" name="line-335"></a>  <span class="n">iDestruct</span> <span class="s2">"HΔ"</span> <span class="k">as</span> <span class="s2">"(Hc &amp; HP &amp; HQ)"</span><span class="o">.</span> <span class="n">iApply</span> <span class="o">(</span><span class="n">wp_send</span> <span class="k">with</span> <span class="s2">"[Hc HP]"</span><span class="o">).</span>
+</span><span id="linespan-336"><a id="line-336" name="line-336"></a>  <span class="o">{</span> <span class="n">iApply</span> <span class="o">(</span><span class="n">own_chan_subprot</span> <span class="k">with</span> <span class="s2">"Hc"</span><span class="o">);</span> <span class="n">iIntros</span> <span class="s2">"!&gt;"</span><span class="o">.</span>
+</span><span id="linespan-337"><a id="line-337" name="line-337"></a>    <span class="n">iApply</span> <span class="n">subprot_trans</span><span class="o">;</span> <span class="o">[</span><span class="n">iApply</span> <span class="n">Hp</span><span class="o">|].</span> <span class="n">iExists</span> <span class="n">x</span><span class="o">.</span> <span class="n">iFrame</span> <span class="s2">"HP"</span><span class="o">.</span> <span class="k">auto</span><span class="o">.</span> <span class="o">}</span>
+</span><span id="linespan-338"><a id="line-338" name="line-338"></a>  <span class="n">iIntros</span> <span class="s2">"!&gt; Hc"</span><span class="o">.</span> <span class="n">iApply</span> <span class="n">HQ</span><span class="o">.</span> <span class="n">iApply</span> <span class="s2">"HQ"</span><span class="o">;</span> <span class="kp">by</span> <span class="n">iFrame</span><span class="o">.</span>
+</span><span id="linespan-339"><a id="line-339" name="line-339"></a><span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-340"><a id="line-340" name="line-340"></a>
+</span><span id="linespan-341"><a id="line-341" name="line-341"></a><span class="kn">Lemma</span> <span class="n">tac_wp_wait</span> <span class="o">{</span><span class="n">Δ</span> <span class="n">Δ'</span> <span class="n">e</span> <span class="n">n</span> <span class="n">k</span> <span class="n">c</span> <span class="n">p</span> <span class="n">i</span> <span class="n">Φ</span> <span class="n">Q</span><span class="o">}</span> <span class="o">:</span>
+</span><span id="linespan-342"><a id="line-342" name="line-342"></a>  <span class="n">DoPureStepsIntoCtx</span> <span class="n">e</span> <span class="o">(</span><span class="n">TCEq</span> <span class="o">(</span><span class="n">wait</span> <span class="o">(</span><span class="n">Val</span> <span class="n">c</span><span class="o">)))</span> <span class="n">n</span> <span class="n">k</span> <span class="o">→</span>
+</span><span id="linespan-343"><a id="line-343" name="line-343"></a>  <span class="n">MaybeIntoLaterNEnvs</span> <span class="n">n</span> <span class="n">Δ</span> <span class="n">Δ'</span> <span class="o">→</span>
+</span><span id="linespan-344"><a id="line-344" name="line-344"></a>  <span class="n">envs_lookup</span> <span class="n">i</span> <span class="n">Δ'</span> <span class="o">=</span> <span class="n">Some</span> <span class="o">(</span><span class="bp">false</span><span class="o">,</span> <span class="n">c</span> <span class="bp">↣</span> <span class="n">p</span><span class="o">)%</span><span class="n">I</span> <span class="o">→</span>
+</span><span id="linespan-345"><a id="line-345" name="line-345"></a>  <span class="n">ProtNormalize</span> <span class="bp">false</span> <span class="n">p</span> <span class="n">END</span><span class="o">?</span> <span class="o">→</span>
+</span><span id="linespan-346"><a id="line-346" name="line-346"></a>  <span class="n">FinalizeWP</span> <span class="o">(</span><span class="n">k</span> <span class="o">(</span><span class="n">Val</span> <span class="o">#</span><span class="bp">()</span><span class="o">))</span> <span class="n">Φ</span> <span class="n">Q</span> <span class="o">→</span>
+</span><span id="linespan-347"><a id="line-347" name="line-347"></a>  <span class="n">envs_entails</span> <span class="o">(</span><span class="n">envs_delete</span> <span class="bp">false</span> <span class="n">i</span> <span class="bp">false</span> <span class="n">Δ'</span><span class="o">)</span> <span class="n">Q</span> <span class="o">→</span>
+</span><span id="linespan-348"><a id="line-348" name="line-348"></a>  <span class="n">envs_entails</span> <span class="n">Δ</span> <span class="o">(</span><span class="n">WP</span> <span class="n">e</span> <span class="o">{{</span> <span class="n">Φ</span> <span class="o">}}).</span>
+</span><span id="linespan-349"><a id="line-349" name="line-349"></a><span class="kn">Proof</span><span class="o">.</span>
+</span><span id="linespan-350"><a id="line-350" name="line-350"></a>  <span class="k">rewrite</span> <span class="n">envs_entails_unseal</span><span class="o">.</span>
+</span><span id="linespan-351"><a id="line-351" name="line-351"></a>  <span class="n">iIntros</span> <span class="o">((</span><span class="n">e'</span><span class="o">&amp;?&amp;&lt;-%</span><span class="n">TCEq_eq</span><span class="o">&amp;</span><span class="n">Hwp</span><span class="o">)%</span><span class="n">do_pure_steps_into_ctx_wp</span> <span class="o">???</span> <span class="o">[</span><span class="n">HQ</span><span class="o">]</span> <span class="n">HΔ'</span><span class="o">)</span> <span class="s2">"HΔ"</span><span class="o">.</span>
+</span><span id="linespan-352"><a id="line-352" name="line-352"></a>  <span class="k">rewrite</span> <span class="n">into_laterN_env_sound</span> <span class="o">/=</span> <span class="n">envs_lookup_sound</span> <span class="o">//=.</span>
+</span><span id="linespan-353"><a id="line-353" name="line-353"></a>  <span class="k">set</span> <span class="o">(</span><span class="n">envs_delete</span> <span class="bp">true</span> <span class="n">i</span> <span class="bp">false</span> <span class="n">Δ'</span><span class="o">)</span> <span class="k">as</span> <span class="n">Δ''</span><span class="o">.</span>
+</span><span id="linespan-354"><a id="line-354" name="line-354"></a>  <span class="n">iDestruct</span> <span class="s2">"HΔ"</span> <span class="k">as</span> <span class="s2">"[Hc HΔ]"</span><span class="o">;</span> <span class="o">[</span><span class="kp">done</span><span class="o">..|].</span>
+</span><span id="linespan-355"><a id="line-355" name="line-355"></a>  <span class="n">iApply</span> <span class="n">Hwp</span><span class="o">.</span> <span class="n">iNext</span><span class="o">.</span> <span class="n">iApply</span> <span class="o">(</span><span class="n">wp_wait</span> <span class="k">with</span> <span class="s2">"Hc"</span><span class="o">);</span> <span class="n">iIntros</span> <span class="s2">"!&gt; _"</span><span class="o">.</span>
+</span><span id="linespan-356"><a id="line-356" name="line-356"></a>  <span class="n">iApply</span> <span class="n">HQ</span><span class="o">.</span> <span class="kp">by</span> <span class="n">iApply</span> <span class="n">HΔ'</span><span class="o">.</span>
+</span><span id="linespan-357"><a id="line-357" name="line-357"></a><span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-358"><a id="line-358" name="line-358"></a>
+</span><span id="linespan-359"><a id="line-359" name="line-359"></a><span class="kn">Lemma</span> <span class="n">tac_wp_close</span> <span class="o">{</span><span class="n">Δ</span> <span class="n">Δ'</span> <span class="n">e</span> <span class="n">n</span> <span class="n">k</span> <span class="n">c</span> <span class="n">p</span> <span class="n">i</span> <span class="n">Φ</span> <span class="n">Q</span><span class="o">}</span> <span class="o">:</span>
+</span><span id="linespan-360"><a id="line-360" name="line-360"></a>  <span class="n">DoPureStepsIntoCtx</span> <span class="n">e</span> <span class="o">(</span><span class="n">TCEq</span> <span class="o">(</span><span class="n">close</span> <span class="o">(</span><span class="n">Val</span> <span class="n">c</span><span class="o">)))</span> <span class="n">n</span> <span class="n">k</span> <span class="o">→</span>
+</span><span id="linespan-361"><a id="line-361" name="line-361"></a>  <span class="n">MaybeIntoLaterNEnvs</span> <span class="n">n</span> <span class="n">Δ</span> <span class="n">Δ'</span> <span class="o">→</span>
+</span><span id="linespan-362"><a id="line-362" name="line-362"></a>  <span class="n">envs_lookup</span> <span class="n">i</span> <span class="n">Δ'</span> <span class="o">=</span> <span class="n">Some</span> <span class="o">(</span><span class="bp">false</span><span class="o">,</span> <span class="n">c</span> <span class="bp">↣</span> <span class="n">p</span><span class="o">)%</span><span class="n">I</span> <span class="o">→</span>
+</span><span id="linespan-363"><a id="line-363" name="line-363"></a>  <span class="n">ProtNormalize</span> <span class="bp">false</span> <span class="n">p</span> <span class="n">END</span><span class="o">!</span> <span class="o">→</span>
+</span><span id="linespan-364"><a id="line-364" name="line-364"></a>  <span class="n">FinalizeWP</span> <span class="o">(</span><span class="n">k</span> <span class="o">(</span><span class="n">Val</span> <span class="o">#</span><span class="bp">()</span><span class="o">))</span> <span class="n">Φ</span> <span class="n">Q</span> <span class="o">→</span>
+</span><span id="linespan-365"><a id="line-365" name="line-365"></a>  <span class="n">envs_entails</span> <span class="o">(</span><span class="n">envs_delete</span> <span class="bp">false</span> <span class="n">i</span> <span class="bp">false</span> <span class="n">Δ'</span><span class="o">)</span> <span class="n">Q</span> <span class="o">→</span>
+</span><span id="linespan-366"><a id="line-366" name="line-366"></a>  <span class="n">envs_entails</span> <span class="n">Δ</span> <span class="o">(</span><span class="n">WP</span> <span class="n">e</span> <span class="o">{{</span> <span class="n">Φ</span> <span class="o">}}).</span>
+</span><span id="linespan-367"><a id="line-367" name="line-367"></a><span class="kn">Proof</span><span class="o">.</span>
+</span><span id="linespan-368"><a id="line-368" name="line-368"></a>  <span class="k">rewrite</span> <span class="n">envs_entails_unseal</span><span class="o">.</span>
+</span><span id="linespan-369"><a id="line-369" name="line-369"></a>  <span class="n">iIntros</span> <span class="o">((</span><span class="n">e'</span><span class="o">&amp;?&amp;&lt;-%</span><span class="n">TCEq_eq</span><span class="o">&amp;</span><span class="n">Hwp</span><span class="o">)%</span><span class="n">do_pure_steps_into_ctx_wp</span> <span class="o">???</span> <span class="o">[</span><span class="n">HQ</span><span class="o">]</span> <span class="n">HΔ'</span><span class="o">)</span> <span class="s2">"HΔ"</span><span class="o">.</span>
+</span><span id="linespan-370"><a id="line-370" name="line-370"></a>  <span class="k">rewrite</span> <span class="n">into_laterN_env_sound</span> <span class="o">/=</span> <span class="n">envs_lookup_sound</span> <span class="o">//=.</span>
+</span><span id="linespan-371"><a id="line-371" name="line-371"></a>  <span class="k">set</span> <span class="o">(</span><span class="n">envs_delete</span> <span class="bp">true</span> <span class="n">i</span> <span class="bp">false</span> <span class="n">Δ'</span><span class="o">)</span> <span class="k">as</span> <span class="n">Δ''</span><span class="o">.</span>
+</span><span id="linespan-372"><a id="line-372" name="line-372"></a>  <span class="n">iDestruct</span> <span class="s2">"HΔ"</span> <span class="k">as</span> <span class="s2">"[Hc HΔ]"</span><span class="o">;</span> <span class="o">[</span><span class="kp">done</span><span class="o">..|].</span>
+</span><span id="linespan-373"><a id="line-373" name="line-373"></a>  <span class="n">iApply</span> <span class="n">Hwp</span><span class="o">.</span> <span class="n">iNext</span><span class="o">.</span> <span class="n">iApply</span> <span class="o">(</span><span class="n">wp_close</span> <span class="k">with</span> <span class="s2">"Hc"</span><span class="o">);</span> <span class="n">iNext</span><span class="o">.</span>
+</span><span id="linespan-374"><a id="line-374" name="line-374"></a>  <span class="n">iApply</span> <span class="n">HQ</span><span class="o">.</span> <span class="kp">by</span> <span class="n">iApply</span> <span class="n">HΔ'</span><span class="o">.</span>
+</span><span id="linespan-375"><a id="line-375" name="line-375"></a><span class="kn">Qed</span><span class="o">.</span>
+</span><span id="linespan-376"><a id="line-376" name="line-376"></a>
+</span><span id="linespan-377"><a id="line-377" name="line-377"></a><span class="kn">Tactic</span> <span class="kn">Notation</span> <span class="s2">"wp_recv_core"</span> <span class="n">tactic3</span><span class="o">(</span><span class="n">tac_intros</span><span class="o">)</span> <span class="s2">"as"</span> <span class="n">tactic3</span><span class="o">(</span><span class="n">tac</span><span class="o">)</span> <span class="o">:=</span>
+</span><span id="linespan-378"><a id="line-378" name="line-378"></a>  <span class="n">iStartProof</span><span class="o">;</span>
+</span><span id="linespan-379"><a id="line-379" name="line-379"></a>  <span class="k">let</span> <span class="n">Htmp</span> <span class="o">:=</span> <span class="n">iFresh</span> <span class="k">in</span>
+</span><span id="linespan-380"><a id="line-380" name="line-380"></a>  <span class="n">lazymatch</span> <span class="n">goal</span> <span class="k">with</span>
+</span><span id="linespan-381"><a id="line-381" name="line-381"></a>  <span class="o">|</span> <span class="o">|-</span> <span class="n">environments.envs_entails</span> <span class="o">_</span> <span class="o">(</span><span class="n">WP</span> <span class="o">_</span> <span class="o">{{</span> <span class="o">_</span> <span class="o">}})</span> <span class="o">=&gt;</span>
+</span><span id="linespan-382"><a id="line-382" name="line-382"></a>     <span class="n">notypeclasses</span> <span class="k">refine</span> <span class="o">(</span><span class="n">tac_wp_recv</span> <span class="n">Htmp</span> <span class="o">_</span> <span class="o">_</span> <span class="o">_</span> <span class="o">_</span> <span class="o">_</span> <span class="o">_);</span>
+</span><span id="linespan-383"><a id="line-383" name="line-383"></a>       <span class="o">[</span><span class="n">tc_solve</span> <span class="o">||</span> <span class="n">fail</span> <span class="mi">1</span> <span class="s2">"wp_recv: cannot find 'recv' subexpression"</span>
+</span><span id="linespan-384"><a id="line-384" name="line-384"></a>       <span class="o">|</span><span class="n">tc_solve</span> <span class="c">(* into laters *)</span>
+</span><span id="linespan-385"><a id="line-385" name="line-385"></a>       <span class="o">|</span><span class="n">iAssumptionCore</span> <span class="o">||</span> <span class="n">fail</span> <span class="mi">1</span> <span class="s2">"wp_recv: cannot find ↦"</span>
+</span><span id="linespan-386"><a id="line-386" name="line-386"></a>       <span class="o">|</span><span class="n">tc_solve</span> <span class="o">||</span> <span class="n">fail</span> <span class="mi">1</span> <span class="s2">"wp_recv: protocol not a recv"</span>
+</span><span id="linespan-387"><a id="line-387" name="line-387"></a>       <span class="o">|</span><span class="kr">try</span> <span class="n">tc_solve</span> <span class="c">(* wp finalize *)</span>
+</span><span id="linespan-388"><a id="line-388" name="line-388"></a>       <span class="o">|</span><span class="n">pm_reduce</span><span class="o">;</span> <span class="n">cbn</span> <span class="o">[</span><span class="n">tforall</span> <span class="n">tele_fold</span> <span class="n">tele_bind</span> <span class="n">tele_app</span><span class="o">];</span>
+</span><span id="linespan-389"><a id="line-389" name="line-389"></a>        <span class="n">tac_intros</span><span class="o">;</span> <span class="k">intros</span><span class="o">;</span> <span class="n">tac</span> <span class="n">Htmp</span><span class="o">]</span>
+</span><span id="linespan-390"><a id="line-390" name="line-390"></a>  <span class="o">|</span> <span class="o">_</span> <span class="o">=&gt;</span> <span class="n">fail</span> <span class="s2">"wp_recv: goal not a 'wp'"</span>
+</span><span id="linespan-391"><a id="line-391" name="line-391"></a>  <span class="k">end</span><span class="o">.</span>
+</span><span id="linespan-392"><a id="line-392" name="line-392"></a>
+</span><span id="linespan-393"><a id="line-393" name="line-393"></a><span class="kn">Tactic</span> <span class="kn">Notation</span> <span class="s2">"wp_recv"</span> <span class="s2">"as"</span> <span class="n">constr</span><span class="o">(</span><span class="n">pat</span><span class="o">)</span> <span class="o">:=</span>
+</span><span id="linespan-394"><a id="line-394" name="line-394"></a>  <span class="n">wp_recv_core</span> <span class="o">(</span><span class="kr">idtac</span><span class="o">)</span> <span class="k">as</span> <span class="o">(</span><span class="k">fun</span> <span class="n">H</span> <span class="o">=&gt;</span> <span class="n">iDestructHyp</span> <span class="n">H</span> <span class="k">as</span> <span class="n">pat</span><span class="o">).</span>
+</span><span id="linespan-395"><a id="line-395" name="line-395"></a><span class="kn">Tactic</span> <span class="kn">Notation</span> <span class="s2">"wp_recv"</span> <span class="o">:=</span> <span class="n">wp_recv</span> <span class="k">as</span> <span class="s2">"_"</span><span class="o">.</span>
+</span><span id="linespan-396"><a id="line-396" name="line-396"></a><span class="kn">Tactic</span> <span class="kn">Notation</span> <span class="s2">"wp_recv"</span> <span class="s2">"("</span> <span class="n">simple_intropattern_list</span><span class="o">(</span><span class="n">xs</span><span class="o">)</span> <span class="s2">")"</span> <span class="s2">"as"</span> <span class="n">constr</span><span class="o">(</span><span class="n">pat</span><span class="o">)</span> <span class="o">:=</span>
+</span><span id="linespan-397"><a id="line-397" name="line-397"></a>  <span class="n">wp_recv_core</span> <span class="o">(</span><span class="k">intros</span> <span class="n">xs</span><span class="o">)</span> <span class="k">as</span> <span class="o">(</span><span class="k">fun</span> <span class="n">H</span> <span class="o">=&gt;</span> <span class="n">iDestructHyp</span> <span class="n">H</span> <span class="k">as</span> <span class="n">pat</span><span class="o">).</span>
+</span><span id="linespan-398"><a id="line-398" name="line-398"></a><span class="kn">Tactic</span> <span class="kn">Notation</span> <span class="s2">"wp_recv"</span> <span class="s2">"("</span> <span class="n">simple_intropattern_list</span><span class="o">(</span><span class="n">xs</span><span class="o">)</span> <span class="s2">")"</span> <span class="o">:=</span>
+</span><span id="linespan-399"><a id="line-399" name="line-399"></a>  <span class="n">wp_recv_core</span> <span class="o">(</span><span class="k">intros</span> <span class="n">xs</span><span class="o">)</span> <span class="k">as</span> <span class="o">(</span><span class="k">fun</span> <span class="n">H</span> <span class="o">=&gt;</span> <span class="n">iDestructHyp</span> <span class="n">H</span> <span class="k">as</span> <span class="s2">"_"</span><span class="o">).</span>
+</span><span id="linespan-400"><a id="line-400" name="line-400"></a>
+</span><span id="linespan-401"><a id="line-401" name="line-401"></a><span class="kn">Tactic</span> <span class="kn">Notation</span> <span class="s2">"wp_send_core"</span> <span class="n">tactic3</span><span class="o">(</span><span class="n">tac_exist</span><span class="o">)</span> <span class="s2">"with"</span> <span class="n">constr</span><span class="o">(</span><span class="n">pat</span><span class="o">)</span> <span class="o">:=</span>
+</span><span id="linespan-402"><a id="line-402" name="line-402"></a>  <span class="k">let</span> <span class="n">solve_done</span> <span class="n">d</span> <span class="o">:=</span>
+</span><span id="linespan-403"><a id="line-403" name="line-403"></a>    <span class="n">lazymatch</span> <span class="n">d</span> <span class="k">with</span>
+</span><span id="linespan-404"><a id="line-404" name="line-404"></a>    <span class="o">|</span> <span class="bp">true</span> <span class="o">=&gt;</span>
+</span><span id="linespan-405"><a id="line-405" name="line-405"></a>       <span class="kp">done</span> <span class="o">||</span>
+</span><span id="linespan-406"><a id="line-406" name="line-406"></a>       <span class="k">let</span> <span class="n">Q</span> <span class="o">:=</span> <span class="k">match</span> <span class="n">goal</span> <span class="k">with</span> <span class="o">|-</span> <span class="n">envs_entails</span> <span class="o">_</span> <span class="o">?</span><span class="n">Q</span> <span class="o">=&gt;</span> <span class="n">Q</span> <span class="k">end</span> <span class="k">in</span>
+</span><span id="linespan-407"><a id="line-407" name="line-407"></a>       <span class="n">fail</span> <span class="s2">"wp_send: cannot solve"</span> <span class="n">Q</span> <span class="s2">"using done"</span>
+</span><span id="linespan-408"><a id="line-408" name="line-408"></a>    <span class="o">|</span> <span class="bp">false</span> <span class="o">=&gt;</span> <span class="kr">idtac</span>
+</span><span id="linespan-409"><a id="line-409" name="line-409"></a>    <span class="k">end</span> <span class="k">in</span>
+</span><span id="linespan-410"><a id="line-410" name="line-410"></a>  <span class="n">lazymatch</span> <span class="n">spec_pat.parse</span> <span class="n">pat</span> <span class="k">with</span>
+</span><span id="linespan-411"><a id="line-411" name="line-411"></a>  <span class="o">|</span> <span class="o">[</span><span class="n">SGoal</span> <span class="o">(</span><span class="n">SpecGoal</span> <span class="n">GSpatial</span> <span class="o">?</span><span class="n">neg</span> <span class="o">?</span><span class="n">Hs_frame</span> <span class="o">?</span><span class="n">Hs</span> <span class="o">?</span><span class="n">d</span><span class="o">)]</span> <span class="o">=&gt;</span>
+</span><span id="linespan-412"><a id="line-412" name="line-412"></a>     <span class="k">let</span> <span class="n">Hs'</span> <span class="o">:=</span> <span class="n">eval</span> <span class="k">cbv</span> <span class="k">in</span> <span class="o">(</span><span class="k">if</span> <span class="n">neg</span> <span class="k">then</span> <span class="n">Hs</span> <span class="k">else</span> <span class="n">Hs_frame</span> <span class="o">++</span> <span class="n">Hs</span><span class="o">)</span> <span class="k">in</span>
+</span><span id="linespan-413"><a id="line-413" name="line-413"></a>     <span class="n">iStartProof</span><span class="o">;</span>
+</span><span id="linespan-414"><a id="line-414" name="line-414"></a>     <span class="n">lazymatch</span> <span class="n">goal</span> <span class="k">with</span>
+</span><span id="linespan-415"><a id="line-415" name="line-415"></a>     <span class="o">|</span> <span class="o">|-</span> <span class="n">environments.envs_entails</span> <span class="o">_</span> <span class="o">(</span><span class="n">WP</span> <span class="o">_</span> <span class="o">{{</span> <span class="o">_</span> <span class="o">}})</span> <span class="o">=&gt;</span>
+</span><span id="linespan-416"><a id="line-416" name="line-416"></a>          <span class="n">notypeclasses</span> <span class="k">refine</span> <span class="o">(</span><span class="n">tac_wp_send</span> <span class="n">neg</span> <span class="n">Hs'</span> <span class="o">_</span> <span class="o">_</span> <span class="o">_</span> <span class="o">_</span> <span class="o">_);</span>
+</span><span id="linespan-417"><a id="line-417" name="line-417"></a>            <span class="o">[</span><span class="n">tc_solve</span> <span class="o">||</span> <span class="n">fail</span> <span class="mi">1</span> <span class="s2">"wp_send: cannot find 'send' subexpression"</span>
+</span><span id="linespan-418"><a id="line-418" name="line-418"></a>            <span class="o">|</span><span class="n">tc_solve</span> <span class="c">(* into laters *)</span>
+</span><span id="linespan-419"><a id="line-419" name="line-419"></a>            <span class="o">|</span><span class="n">iAssumptionCore</span> <span class="o">||</span> <span class="n">fail</span> <span class="mi">1</span> <span class="s2">"wp_send: cannot find ↦"</span>
+</span><span id="linespan-420"><a id="line-420" name="line-420"></a>            <span class="o">|</span><span class="n">tc_solve</span> <span class="o">||</span> <span class="n">fail</span> <span class="mi">1</span> <span class="s2">"wp_send: protocol not a send"</span>
+</span><span id="linespan-421"><a id="line-421" name="line-421"></a>            <span class="o">|</span><span class="n">pm_reduce</span><span class="o">;</span> <span class="k">simpl</span><span class="o">;</span> <span class="n">tac_exist</span><span class="o">;</span>
+</span><span id="linespan-422"><a id="line-422" name="line-422"></a>             <span class="kr">repeat</span> <span class="n">lazymatch</span> <span class="n">goal</span> <span class="k">with</span> <span class="o">|-</span> <span class="o">∃</span> <span class="o">_,</span> <span class="o">_</span> <span class="o">=&gt;</span> <span class="n">eexists</span> <span class="o">_</span> <span class="k">end</span><span class="o">;</span>
+</span><span id="linespan-423"><a id="line-423" name="line-423"></a>             <span class="n">notypeclasses</span> <span class="k">refine</span> <span class="o">(</span><span class="n">conj</span> <span class="o">_</span> <span class="o">(</span><span class="n">conj</span> <span class="o">_</span> <span class="o">(</span><span class="n">ex_intro</span> <span class="o">_</span> <span class="o">_</span> <span class="o">(</span><span class="n">conj</span> <span class="o">_</span> <span class="o">_))));</span>
+</span><span id="linespan-424"><a id="line-424" name="line-424"></a>               <span class="o">[</span><span class="n">notypeclasses</span> <span class="k">refine</span> <span class="o">(</span><span class="n">eq_refl</span> <span class="o">_)</span>
+</span><span id="linespan-425"><a id="line-425" name="line-425"></a>                 <span class="o">||</span> <span class="n">fail</span> <span class="mi">1</span> <span class="s2">"wp_send: value does not match protocol"</span>
+</span><span id="linespan-426"><a id="line-426" name="line-426"></a>               <span class="o">|</span><span class="n">iFrame</span> <span class="n">Hs_frame</span><span class="o">;</span> <span class="n">solve_done</span> <span class="n">d</span>
+</span><span id="linespan-427"><a id="line-427" name="line-427"></a>               <span class="o">|</span><span class="n">tc_solve</span> <span class="c">(* simpl *)</span>
+</span><span id="linespan-428"><a id="line-428" name="line-428"></a>               <span class="o">|]]</span>
+</span><span id="linespan-429"><a id="line-429" name="line-429"></a>     <span class="o">|</span> <span class="o">_</span> <span class="o">=&gt;</span> <span class="n">fail</span> <span class="s2">"wp_send: not a 'wp'"</span>
+</span><span id="linespan-430"><a id="line-430" name="line-430"></a>     <span class="k">end</span>
+</span><span id="linespan-431"><a id="line-431" name="line-431"></a>  <span class="o">|</span> <span class="o">_</span> <span class="o">=&gt;</span> <span class="n">fail</span> <span class="s2">"wp_send: only a single non-framing spec pattern supported"</span>
+</span><span id="linespan-432"><a id="line-432" name="line-432"></a>  <span class="k">end</span><span class="o">.</span>
+</span><span id="linespan-433"><a id="line-433" name="line-433"></a>
+</span><span id="linespan-434"><a id="line-434" name="line-434"></a><span class="c">(* From <a href="https://gitlab.mpi-sws.org/iris/iris/-/merge_requests/931">https://gitlab.mpi-sws.org/iris/iris/-/merge_requests/931</a> *)</span>
+</span><span id="linespan-435"><a id="line-435" name="line-435"></a><span class="n">Ltac2</span> <span class="n">with_ltac1_list</span> <span class="n">f</span> <span class="n">ls</span> <span class="o">:=</span>
+</span><span id="linespan-436"><a id="line-436" name="line-436"></a>  <span class="k">let</span> <span class="n">ls</span> <span class="o">:=</span> <span class="n">Option.get</span> <span class="o">(</span><span class="n">Ltac1.to_list</span> <span class="n">ls</span><span class="o">)</span> <span class="k">in</span>
+</span><span id="linespan-437"><a id="line-437" name="line-437"></a>  <span class="n">f</span> <span class="n">ls</span><span class="o">.</span>
+</span><span id="linespan-438"><a id="line-438" name="line-438"></a>
+</span><span id="linespan-439"><a id="line-439" name="line-439"></a><span class="kn">Tactic</span> <span class="kn">Notation</span> <span class="s2">"wp_send"</span> <span class="s2">"with"</span> <span class="n">constr</span><span class="o">(</span><span class="n">pat</span><span class="o">)</span> <span class="o">:=</span>
+</span><span id="linespan-440"><a id="line-440" name="line-440"></a>  <span class="n">wp_send_core</span> <span class="o">(</span><span class="kr">idtac</span><span class="o">)</span> <span class="k">with</span> <span class="n">pat</span><span class="o">.</span>
+</span><span id="linespan-441"><a id="line-441" name="line-441"></a><span class="kn">Tactic</span> <span class="kn">Notation</span> <span class="s2">"wp_send"</span> <span class="o">:=</span> <span class="n">wp_send</span> <span class="k">with</span> <span class="s2">"[//]"</span><span class="o">.</span>
+</span><span id="linespan-442"><a id="line-442" name="line-442"></a><span class="kn">Tactic</span> <span class="kn">Notation</span> <span class="s2">"wp_send"</span> <span class="s2">"("</span> <span class="n">ne_uconstr_list_sep</span><span class="o">(</span><span class="n">xs</span><span class="o">,</span><span class="s2">","</span><span class="o">)</span> <span class="s2">")"</span> <span class="s2">"with"</span> <span class="n">constr</span><span class="o">(</span><span class="n">pat</span><span class="o">)</span> <span class="o">:=</span>
+</span><span id="linespan-443"><a id="line-443" name="line-443"></a>  <span class="n">wp_send_core</span> <span class="o">(</span><span class="kr">idtac</span><span class="o">;</span>
+</span><span id="linespan-444"><a id="line-444" name="line-444"></a>    <span class="k">let</span> <span class="n">f</span> <span class="o">:=</span> <span class="n">ltac2</span><span class="o">:(</span><span class="n">xs</span> <span class="o">|-</span> <span class="n">with_ltac1_list</span> <span class="o">(</span><span class="n">List.iter</span> <span class="n">ltac1</span><span class="o">:(</span><span class="n">x</span> <span class="o">|-</span> <span class="n">eexists</span> <span class="n">x</span><span class="o">))</span> <span class="n">xs</span><span class="o">)</span>
+</span><span id="linespan-445"><a id="line-445" name="line-445"></a>    <span class="k">in</span> <span class="n">f</span> <span class="n">xs</span><span class="o">)</span> <span class="k">with</span> <span class="n">pat</span><span class="o">.</span>
+</span><span id="linespan-446"><a id="line-446" name="line-446"></a>
+</span><span id="linespan-447"><a id="line-447" name="line-447"></a><span class="kn">Tactic</span> <span class="kn">Notation</span> <span class="s2">"wp_wait"</span> <span class="o">:=</span>
+</span><span id="linespan-448"><a id="line-448" name="line-448"></a>  <span class="n">iStartProof</span><span class="o">;</span>
+</span><span id="linespan-449"><a id="line-449" name="line-449"></a>  <span class="n">lazymatch</span> <span class="n">goal</span> <span class="k">with</span>
+</span><span id="linespan-450"><a id="line-450" name="line-450"></a>  <span class="o">|</span> <span class="o">|-</span> <span class="n">environments.envs_entails</span> <span class="o">_</span> <span class="o">(</span><span class="n">WP</span> <span class="o">_</span> <span class="o">{{</span> <span class="o">_</span> <span class="o">}})</span> <span class="o">=&gt;</span>
+</span><span id="linespan-451"><a id="line-451" name="line-451"></a>     <span class="n">notypeclasses</span> <span class="k">refine</span> <span class="o">(</span><span class="n">tac_wp_wait</span> <span class="o">_</span> <span class="o">_</span> <span class="o">_</span> <span class="o">_</span> <span class="o">_</span> <span class="o">_);</span>
+</span><span id="linespan-452"><a id="line-452" name="line-452"></a>       <span class="o">[</span><span class="n">tc_solve</span> <span class="o">||</span> <span class="n">fail</span> <span class="mi">1</span> <span class="s2">"wp_wait: cannot find 'wait' subexpression"</span>
+</span><span id="linespan-453"><a id="line-453" name="line-453"></a>       <span class="o">|</span><span class="n">tc_solve</span> <span class="c">(* into laters *)</span>
+</span><span id="linespan-454"><a id="line-454" name="line-454"></a>       <span class="o">|</span><span class="n">iAssumptionCore</span> <span class="o">||</span> <span class="n">fail</span> <span class="mi">1</span> <span class="s2">"wp_wait: cannot find ↦"</span>
+</span><span id="linespan-455"><a id="line-455" name="line-455"></a>       <span class="o">|</span><span class="n">tc_solve</span> <span class="o">||</span> <span class="n">fail</span> <span class="mi">1</span> <span class="s2">"wp_wait: protocol not an END?"</span>
+</span><span id="linespan-456"><a id="line-456" name="line-456"></a>       <span class="o">|</span><span class="n">tc_solve</span> <span class="c">(* simpl *)</span>
+</span><span id="linespan-457"><a id="line-457" name="line-457"></a>       <span class="o">|</span><span class="n">pm_reduce</span><span class="o">]</span>
+</span><span id="linespan-458"><a id="line-458" name="line-458"></a>  <span class="o">|</span> <span class="o">_</span> <span class="o">=&gt;</span> <span class="n">fail</span> <span class="s2">"wp_wait: goal not a 'wp'"</span>
+</span><span id="linespan-459"><a id="line-459" name="line-459"></a>  <span class="k">end</span><span class="o">.</span>
+</span><span id="linespan-460"><a id="line-460" name="line-460"></a><span class="kn">Tactic</span> <span class="kn">Notation</span> <span class="s2">"wp_wait"</span> <span class="s2">"!"</span> <span class="o">:=</span> <span class="n">wp_wait</span><span class="o">;</span> <span class="n">wp_pures</span> <span class="o">_.</span>
+</span><span id="linespan-461"><a id="line-461" name="line-461"></a>
+</span><span id="linespan-462"><a id="line-462" name="line-462"></a><span class="kn">Tactic</span> <span class="kn">Notation</span> <span class="s2">"wp_close"</span> <span class="o">:=</span>
+</span><span id="linespan-463"><a id="line-463" name="line-463"></a>  <span class="n">iStartProof</span><span class="o">;</span>
+</span><span id="linespan-464"><a id="line-464" name="line-464"></a>  <span class="n">lazymatch</span> <span class="n">goal</span> <span class="k">with</span>
+</span><span id="linespan-465"><a id="line-465" name="line-465"></a>  <span class="o">|</span> <span class="o">|-</span> <span class="n">environments.envs_entails</span> <span class="o">_</span> <span class="o">(</span><span class="n">WP</span> <span class="o">_</span> <span class="o">{{</span> <span class="o">_</span> <span class="o">}})</span> <span class="o">=&gt;</span>
+</span><span id="linespan-466"><a id="line-466" name="line-466"></a>     <span class="n">notypeclasses</span> <span class="k">refine</span> <span class="o">(</span><span class="n">tac_wp_close</span> <span class="o">_</span> <span class="o">_</span> <span class="o">_</span> <span class="o">_</span> <span class="o">_</span> <span class="o">_);</span>
+</span><span id="linespan-467"><a id="line-467" name="line-467"></a>       <span class="o">[</span><span class="n">tc_solve</span> <span class="o">||</span> <span class="n">fail</span> <span class="mi">1</span> <span class="s2">"wp_close: cannot find 'close' subexpression"</span>
+</span><span id="linespan-468"><a id="line-468" name="line-468"></a>       <span class="o">|</span><span class="n">tc_solve</span> <span class="c">(* into laters *)</span>
+</span><span id="linespan-469"><a id="line-469" name="line-469"></a>       <span class="o">|</span><span class="n">iAssumptionCore</span> <span class="o">||</span> <span class="n">fail</span> <span class="mi">1</span> <span class="s2">"wp_close: cannot find ↦"</span>
+</span><span id="linespan-470"><a id="line-470" name="line-470"></a>       <span class="o">|</span><span class="n">tc_solve</span> <span class="o">||</span> <span class="n">fail</span> <span class="mi">1</span> <span class="s2">"wp_close: protocol not an END!"</span>
+</span><span id="linespan-471"><a id="line-471" name="line-471"></a>       <span class="o">|</span><span class="n">tc_solve</span> <span class="c">(* simpl *)</span>
+</span><span id="linespan-472"><a id="line-472" name="line-472"></a>       <span class="o">|</span><span class="n">pm_reduce</span><span class="o">]</span>
+</span><span id="linespan-473"><a id="line-473" name="line-473"></a>  <span class="o">|</span> <span class="o">_</span> <span class="o">=&gt;</span> <span class="n">fail</span> <span class="s2">"wp_close: goal not a 'wp'"</span>
+</span><span id="linespan-474"><a id="line-474" name="line-474"></a>  <span class="k">end</span><span class="o">.</span>
+</span><span id="linespan-475"><a id="line-475" name="line-475"></a><span class="kn">Tactic</span> <span class="kn">Notation</span> <span class="s2">"wp_close"</span> <span class="s2">"!"</span> <span class="o">:=</span> <span class="n">wp_close</span><span class="o">;</span> <span class="n">wp_pures</span> <span class="o">_.</span>
+</span></pre></div></td></tr></table></div>
+</div></div></body></html>
