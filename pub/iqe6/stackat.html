@@ -1001,6 +1001,89 @@
             test_decide_equivalence_mixed_headers_push_pop();
         }
 
+        let allExamples = [
+            // --- test_decide_equivalence_all ---
+            // e1 vs e2
+            ["pop(2)* push(2)*", "(push(2) + pop(2))*"],
+            // e1 vs e3
+            ["pop(2)* push(2)*", "push(2)* (pop(2) pop(2))*"],
+            // e1 vs e4
+            ["pop(2)* push(2)*", "(pop(2) pop(2))* push(2)*"],
+            // e1 vs e5
+            ["pop(2)* push(2)*", "(push(2) push(2))* pop(2)*"],
+            // e1 vs e6
+            ["pop(2)* push(2)*", "pop(2)* (push(2) push(2))*"],
+            // e2 vs e3
+            ["(push(2) + pop(2))*", "push(2)* (pop(2) pop(2))*"],
+            // e2 vs e4
+            ["(push(2) + pop(2))*", "(pop(2) pop(2))* push(2)*"],
+            // e2 vs e5
+            ["(push(2) + pop(2))*", "(push(2) push(2))* pop(2)*"],
+            // e2 vs e6
+            ["(push(2) + pop(2))*", "pop(2)* (push(2) push(2))*"],
+            // e3 vs e4
+            ["push(2)* (pop(2) pop(2))*", "(pop(2) pop(2))* push(2)*"],
+            // e3 vs e5
+            ["push(2)* (pop(2) pop(2))*", "(push(2) push(2))* pop(2)*"],
+            // e3 vs e6
+            ["push(2)* (pop(2) pop(2))*", "pop(2)* (push(2) push(2))*"],
+            // e4 vs e5
+            ["(pop(2) pop(2))* push(2)*", "(push(2) push(2))* pop(2)*"],
+            // e4 vs e6
+            ["(pop(2) pop(2))* push(2)*", "pop(2)* (push(2) push(2))*"],
+            // e5 vs e6
+            ["(push(2) push(2))* pop(2)*", "pop(2)* (push(2) push(2))*"],
+
+            // --- test_decide_equivalence_all_pure_headers ---
+            // e1 vs e2
+            ["f:=2 g:=3", "g:=3 f:=2"],
+            // e3 vs e4
+            ["f:=2 f==2", "f:=2 f:=2"],
+            // e5 vs e6
+            ["f:=2* g:=3", "g:=3 f:=2*"],
+            // e7 vs e8
+            ["(f:=2 + g:=3)*", "(g:=3 + f:=2)*"],
+            // e9 vs e10
+            ["f:=2* g:=3*", "g:=3* f:=2*"],
+            // e11 vs e12
+            ["(f:=2 + g:=3) f:=4*", "(g:=3 + f:=2) f:=4*"],
+            // e13 vs e14
+            ["f:=2* (g:=3 + h:=4)", "f:=2* (h:=4 + g:=3)"],
+            // e15 vs e16
+            ["(f:=2 + g:=3)* h:=4", "h:=4 (f:=2 + g:=3)*"],
+            // e17 vs e18
+            ["f:=2* (g:=3 + h:=4)*", "(g:=3 + h:=4)* f:=2*"],
+            // e19 vs e20
+            ["f:=2 + f:=3", "f:=2 + f:=2"],
+            ["f:=2 + f==2", "f:=2"],
+            // e23 vs e24
+            ["f:=3*", "f:=2*"],
+            // e21 vs e22
+            ["(f:=2 + f:=3)*", "(f:=2 + f:=2)*"],
+
+            // --- test_decide_equivalence_mixed_headers_push_pop ---
+            // e1 vs e2
+            ["pop(3) f:=2 push(2) pop(2) f:=3", "f:=3 pop(3)"],
+
+            // more interesting examples
+            [
+                "f:=1 (f==1 f:=2 push(1) + f==2 f:=3 push(2))* f==3",
+                "f:=1 f:=3 push(1) push(2)"
+            ],
+            [
+                "f:=1 (f==1 push(1) + f==1 pop(1))* f:=2",
+                "f:=1 (push(1) + pop(1))* f:=2"
+            ],
+            [
+                "f:=2 push(1)* (f==2 pop(1))*",
+                "f:=2 (push(1) + pop(1))*"
+            ],
+            [
+                "f:=1 push(1)* f:=2",
+                "f:=1 (push(1) + push(2))* f:=2"
+            ]
+        ];
+
         // tests();
     </script>
     <style>
@@ -1158,6 +1241,12 @@
 <body>
     <h1>StacKAT playground</h1>
 
+    <div style="margin-bottom: 20px">
+        <!-- <button id="nextExample" style="font-size: 16px; padding: 8px 16px; cursor: pointer;">Next Example</button> -->
+        <!-- <button id="prevExample" style="font-size: 16px; padding: 8px 16px; cursor: pointer;">Prev Example</button> -->
+        <button id="randomExample" style="font-size: 16px; padding: 8px 16px; cursor: pointer;">Random Example</button>
+    </div>
+
     <div id="inputs">
         <div class="editor" id="editor1">
             <pre
@@ -1189,6 +1278,30 @@
     <div id="counterexampleB" class="counterexample"></div>
 
     <script>
+        let currentExampleIndex = 0;
+
+        function shiftExample(delta) {
+            currentExampleIndex = (currentExampleIndex + delta + allExamples.length) % allExamples.length;
+            let [expr1, expr2] = allExamples[currentExampleIndex];
+            document.querySelector('#editor1 .expr').value = expr1;
+            document.querySelector('#editor2 .expr').value = expr2;
+            document.querySelector('#editor1 .expr').dispatchEvent(new Event('input'));
+            document.querySelector('#editor2 .expr').dispatchEvent(new Event('input'));
+        }
+
+        // document.getElementById('nextExample').addEventListener('click', () => {
+        //     shiftExample(1);
+        // });
+
+        // document.getElementById('prevExample').addEventListener('click', () => {
+        //     shiftExample(-1);
+        // });
+
+        document.getElementById('randomExample').addEventListener('click', () => {
+            currentExampleIndex = Math.floor(Math.random() * allExamples.length);
+            shiftExample(0);
+        });
+
         function mkEditor(selector, callback) {
             const editor = document.querySelector(selector);
             const expr = editor.querySelector('.expr');
