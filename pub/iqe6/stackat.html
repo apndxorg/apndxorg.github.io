@@ -38,6 +38,7 @@
         const push = (n) => mk('push', n);
         const pop = (n) => mk('pop', n);
         const test = (id, n) => mk('test', id, n);
+        const testNE = (id, n) => mk('testNE', id, n);
         const mut = (id, n) => mk('mut', id, n);
         const alt = (a, b) => mk('alt', a, b);
         const seq = (a, b) => mk('seq', a, b);
@@ -159,6 +160,9 @@
                     if (tok('==')) {
                         let n = expectNum();
                         return test(id, n);
+                    } else if (tok('!=')) {
+                        let n = expectNum();
+                        return testNE(id, n);
                     } else if (tok(':=')) {
                         let n = expectNum();
                         return mut(id, n);
@@ -210,6 +214,7 @@
                 case 'push': return `push(${expr[1]})`;
                 case 'pop': return `pop(${expr[1]})`;
                 case 'test': return parens(bp >= 20, `${expr[1]}==${expr[2]}`);
+                case 'testNE': return parens(bp >= 20, `${expr[1]}!=${expr[2]}`);
                 case 'mut': return parens(bp >= 20, `${expr[1]}:=${expr[2]}`);
                 case 'alt': return parens(bp > 0, `${pretty(expr[1], 0)} + ${pretty(expr[2], 0)}`);
                 case 'seq': return parens(bp > 10, `${pretty(expr[1], 10)} ${pretty(expr[2], 10)}`);
@@ -231,6 +236,7 @@
                 case 'push': return [];
                 case 'pop': return [];
                 case 'test': return pk.get(expr[1]) == expr[2] ? [pk] : [];
+                case 'testNE': return pk.get(expr[1]) != expr[2] ? [pk] : [];
                 case 'mut':
                     let newPk = new Map(pk);
                     newPk.set(expr[1], expr[2]);
@@ -265,6 +271,7 @@
                 case 'pop':
                     return [[expr, [one, pk]]];
                 case 'test': return [];
+                case 'testNE': return [];
                 case 'mut': return [];
                 case 'alt': return D(expr[1], pk).concat(D(expr[2], pk));
                 case 'seq':
