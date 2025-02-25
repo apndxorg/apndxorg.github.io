@@ -38,7 +38,6 @@
         const push = (n) => mk('push', n);
         const pop = (n) => mk('pop', n);
         const test = (id, n) => mk('test', id, n);
-        const testNE = (id, n) => mk('testNE', id, n);
         const mut = (id, n) => mk('mut', id, n);
         const alt = (a, b) => mk('alt', a, b);
         const seq = (a, b) => mk('seq', a, b);
@@ -160,9 +159,6 @@
                     if (tok('==')) {
                         let n = expectNum();
                         return test(id, n);
-                    } else if (tok('!=')) {
-                        let n = expectNum();
-                        return testNE(id, n);
                     } else if (tok(':=')) {
                         let n = expectNum();
                         return mut(id, n);
@@ -214,7 +210,6 @@
                 case 'push': return `push(${expr[1]})`;
                 case 'pop': return `pop(${expr[1]})`;
                 case 'test': return parens(bp >= 20, `${expr[1]}==${expr[2]}`);
-                case 'testNE': return parens(bp >= 20, `${expr[1]}!=${expr[2]}`);
                 case 'mut': return parens(bp >= 20, `${expr[1]}:=${expr[2]}`);
                 case 'alt': return parens(bp > 0, `${pretty(expr[1], 0)} + ${pretty(expr[2], 0)}`);
                 case 'seq': return parens(bp > 10, `${pretty(expr[1], 10)} ${pretty(expr[2], 10)}`);
@@ -236,7 +231,6 @@
                 case 'push': return [];
                 case 'pop': return [];
                 case 'test': return pk.get(expr[1]) == expr[2] ? [pk] : [];
-                case 'testNE': return pk.get(expr[1]) != expr[2] ? [pk] : [];
                 case 'mut':
                     let newPk = new Map(pk);
                     newPk.set(expr[1], expr[2]);
@@ -271,7 +265,6 @@
                 case 'pop':
                     return [[expr, [one, pk]]];
                 case 'test': return [];
-                case 'testNE': return [];
                 case 'mut': return [];
                 case 'alt': return D(expr[1], pk).concat(D(expr[2], pk));
                 case 'seq':
@@ -325,7 +318,7 @@
                 }
             }
             iter(expr);
-            res.add("?");
+            res.add('v');
             // convert to array
             return Array.from(res);
         }
@@ -620,13 +613,13 @@
             for (let [key, ds] of aut0.entries()) {
                 let vvTargets = new Set();
                 for (let [trans, key1] of ds) {
-                    if (trans == pair(pop("?"), push("?"))) {
+                    if (trans == pair(pop("v"), push("v"))) {
                         vvTargets.add(key1);
                     }
                 }
                 let newDs = [];
                 for (let [trans, key1] of ds) {
-                    if (trans[1][1] != trans[2][1] || !vvTargets.has(key1) || trans[1][1] == "?") {
+                    if (trans[1][1] != trans[2][1] || !vvTargets.has(key1) || trans[1][1] == "v") {
                         newDs.push([trans, key1]);
                     }
                 }
@@ -745,96 +738,6 @@
             return { nodes, edges };
         }
 
-        function minaut(result, values, inpk, outpk) {
-            let aut = automaton(result, inpk, outpk)
-            aut = pushpop(aut);
-            aut = zip(aut);
-            addStartLoopsMut(aut, values);
-            aut = removeEps(aut);
-            aut = removeDead(aut);
-            aut = determinize(aut);
-            aut = minimize(aut);
-            return aut;
-        }
-
-        function decidePk(expr1, expr2, inpk, outpk) {
-            let values = Array.from(new Set(getValues(expr1).concat(getValues(expr2))));
-            let aut1 = minaut(expr1, values, inpk, outpk);
-            let aut2 = minaut(expr2, values, inpk, outpk);
-            let path1 = shortestDifferingPath(aut1, aut2);
-            let path2 = shortestDifferingPath(aut2, aut1);
-            return [path1, path2];
-        }
-
-        function allpks(values) {
-            // values is a map from strings to sets of values
-            // we want to compute a list of maps with all possible values (like cartesian product)
-            let keys = Array.from(values.keys());
-            let pks = [new Map()];
-            for (let key of keys) {
-                let newpks = [];
-                for (let pk of pks) {
-                    for (let value of [...values.get(key), "?"]) {
-                        let newpk = new Map(pk);
-                        newpk.set(key, value);
-                        newpks.push(newpk);
-                    }
-                }
-                pks = newpks;
-            }
-            return pks;
-        }
-
-        function decide(expr1, expr2) {
-            // first, compute the domain of all values in expr1 and expr2
-            let dom1 = dom(expr1); // map from strings to sets of values
-            let dom2 = dom(expr2);
-            // union values2 into values1
-            for (let [key, values] of dom2.entries()) {
-                if (!dom1.has(key)) {
-                    dom1.set(key, values);
-                } else {
-                    for (let value of values) {
-                        dom1.get(key).add(value);
-                    }
-                }
-            }
-            // now, compute all possible pk's
-            let pks = allpks(dom1);
-            console.log("pks", pks)
-            // now, decide for each pk
-            let respath1 = false;
-            let respks1 = false;
-            let respath2 = false;
-            let respks2 = false;
-            for (let inpk of pks) {
-                for (let outpk of pks) {
-                    let [path1, path2] = decidePk(expr1, expr2, inpk, outpk);
-                    console.log("expr1", expr1)
-                    console.log("expr2", expr2)
-                    console.log("inpk", inpk)
-                    console.log("outpk", outpk)
-                    console.log("path1X", path1)
-                    console.log("path2X", path2)
-                    if (path1) {
-                        // update if path is shorter
-                        if (!respath1 || path1.length < respath1.length) {
-                            respath1 = path1;
-                            respks1 = [inpk, outpk];
-                        }
-                    }
-                    if (path2) {
-                        // update if path is shorter
-                        if (!respath2 || path2.length < respath2.length) {
-                            respath2 = path2;
-                            respks2 = [inpk, outpk];
-                        }
-                    }
-                }
-            }
-            return [respath1, respks1, respath2, respks2];
-        }
-
         function renameStates(aut) {
             let aut1 = new Map();
             let key2num = new Map();
@@ -877,221 +780,6 @@
             res += '}\n';
             return res;
         }
-
-        function decideLGE(expr1, expr2) {
-            let [path1, respks1, path2, respks2] = decide(expr1, expr2);
-            if (!path1 && !path2) {
-                return "=";
-            }
-            if (path1 && !path2) {
-                return ">";
-            }
-            if (!path1 && path2) {
-                return "<";
-            }
-            if (path1 && path2) {
-                return "!=";
-            }
-        }
-
-        // unit tests
-        function tests(){
-            // Test decide_equivalence_all
-            function test_decide_equivalence_all() {
-                // Same tests as above, but for decide_equivalence_all
-                let e1 = seq(star(pop("2")), star(push("2")));
-                let e2 = star(alt(push("2"), pop("2")));
-                let e3 = seq(star(push("2")), star(seq(pop("2"), pop("2"))));
-                let e4 = seq(star(seq(pop("2"), pop("2"))), star(push("2")));
-                let e5 = seq(star(seq(push("2"), push("2"))), star(pop("2")));
-                let e6 = seq(star(pop("2")), star(seq(push("2"), push("2"))));
-
-                console.assert(decideLGE(e1, e2) === "=");
-                console.assert(decideLGE(e1, e3) === "=");
-                console.assert(decideLGE(e1, e4) === ">");
-                console.assert(decideLGE(e1, e5) === "=");
-                console.assert(decideLGE(e1, e6) === ">");
-
-                console.assert(decideLGE(e2, e3) === "=");
-                console.assert(decideLGE(e3, e2) === "=");
-
-                console.assert(decideLGE(e2, e4) === ">");
-                console.assert(decideLGE(e4, e2) === "<");
-
-                console.assert(decideLGE(e2, e5) === "=");
-                console.assert(decideLGE(e5, e2) === "=");
-
-                console.assert(decideLGE(e2, e6) === ">");
-                console.assert(decideLGE(e6, e2) === "<");
-
-                console.assert(decideLGE(e3, e4) === ">");
-                console.assert(decideLGE(e4, e3) === "<");
-
-                console.assert(decideLGE(e3, e5) === "=");
-                console.assert(decideLGE(e5, e3) === "=");
-
-                console.assert(decideLGE(e3, e6) === ">");
-                console.assert(decideLGE(e6, e3) === "<");
-
-                console.assert(decideLGE(e4, e5) === "<");
-                console.assert(decideLGE(e5, e4) === ">");
-
-                console.assert(decideLGE(e4, e6) === "!=");
-                console.assert(decideLGE(e6, e4) === "!=");
-
-                console.assert(decideLGE(e5, e6) === ">");
-                console.assert(decideLGE(e6, e5) === "<");
-            }
-
-            // Test decide_equivalence_all_pure_headers
-            function test_decide_equivalence_all_pure_headers() {
-                let e1 = seq(mut("f", "2"), mut("g", "3"));
-                let e2 = seq(mut("g", "3"), mut("f", "2"));
-                console.assert(decideLGE(e1, e2) === "=");
-
-                let e3 = seq(mut("f", "2"), test("f", "2"));
-                let e4 = seq(mut("f", "2"), mut("f", "2"));
-                console.assert(decideLGE(e3, e4) === "=");
-
-                let e5 = seq(star(mut("f", "2")), mut("g", "3"));
-                let e6 = seq(mut("g", "3"), star(mut("f", "2")));
-                console.assert(decideLGE(e5, e6) === "=");
-
-                let e7 = star(alt(mut("f", "2"), mut("g", "3")));
-                let e8 = star(alt(mut("g", "3"), mut("f", "2")));
-                console.assert(decideLGE(e7, e8) === "=");
-
-                let e9 = seq(star(mut("f", "2")), star(mut("g", "3")));
-                let e10 = seq(star(mut("g", "3")), star(mut("f", "2")));
-                console.assert(decideLGE(e9, e10) === "=");
-
-                let e11 = seq(alt(mut("f", "2"), mut("g", "3")), star(mut("f", "4")));
-                let e12 = seq(alt(mut("g", "3"), mut("f", "2")), star(mut("f", "4")));
-                console.assert(decideLGE(e11, e12) === "=");
-
-                let e13 = seq(star(mut("f", "2")), alt(mut("g", "3"), mut("h", "4")));
-                let e14 = seq(star(mut("f", "2")), alt(mut("h", "4"), mut("g", "3")));
-                console.assert(decideLGE(e13, e14) === "=");
-
-                let e15 = seq(star(alt(mut("f", "2"), mut("g", "3"))), mut("h", "4"));
-                let e16 = seq(mut("h", "4"), star(alt(mut("f", "2"), mut("g", "3"))));
-                console.assert(decideLGE(e15, e16) === "=");
-
-                let e17 = seq(star(mut("f", "2")), star(alt(mut("g", "3"), mut("h", "4"))));
-                let e18 = seq(star(alt(mut("g", "3"), mut("h", "4"))), star(mut("f", "2")));
-                console.assert(decideLGE(e17, e18) === "=");
-
-                // f := 2 + f := 3 < f := 2 + f := 2
-                let e19 = alt(mut("f", "2"), mut("f", "3"));
-                let e20 = alt(mut("f", "2"), mut("f", "2"));
-                console.assert(decideLGE(e19, e20) === ">");
-
-                let e23 = star(mut("f", "3"));
-                let e24 = star(mut("f", "2"));
-                console.assert(decideLGE(e23, e24) === "!=");
-
-                let e21 = star(alt(mut("f", "2"), mut("f", "3")));
-                let e22 = star(alt(mut("f", "2"), mut("f", "2")));
-                console.assert(decideLGE(e21, e22) === ">");
-            }
-
-            // Test decide_equivalence_mixed_headers_push_pop
-            function test_decide_equivalence_mixed_headers_push_pop() {
-                let e1 = seq(pop("3"), seq(mut("f", "2"), seq(push("2"), seq(pop("2"), mut("f", "3")))));
-                let e2 = seq(mut("f", "3"), pop("3"));
-                console.assert(decideLGE(e1, e2) === "=");
-            }
-
-            // run the tests
-            test_decide_equivalence_all();
-            test_decide_equivalence_all_pure_headers();
-            test_decide_equivalence_mixed_headers_push_pop();
-        }
-
-        let allExamples = [
-            // --- test_decide_equivalence_all ---
-            // e1 vs e2
-            ["pop(2)* push(2)*", "(push(2) + pop(2))*"],
-            // e1 vs e3
-            ["pop(2)* push(2)*", "push(2)* (pop(2) pop(2))*"],
-            // e1 vs e4
-            ["pop(2)* push(2)*", "(pop(2) pop(2))* push(2)*"],
-            // e1 vs e5
-            ["pop(2)* push(2)*", "(push(2) push(2))* pop(2)*"],
-            // e1 vs e6
-            ["pop(2)* push(2)*", "pop(2)* (push(2) push(2))*"],
-            // e2 vs e3
-            ["(push(2) + pop(2))*", "push(2)* (pop(2) pop(2))*"],
-            // e2 vs e4
-            ["(push(2) + pop(2))*", "(pop(2) pop(2))* push(2)*"],
-            // e2 vs e5
-            ["(push(2) + pop(2))*", "(push(2) push(2))* pop(2)*"],
-            // e2 vs e6
-            ["(push(2) + pop(2))*", "pop(2)* (push(2) push(2))*"],
-            // e3 vs e4
-            ["push(2)* (pop(2) pop(2))*", "(pop(2) pop(2))* push(2)*"],
-            // e3 vs e5
-            ["push(2)* (pop(2) pop(2))*", "(push(2) push(2))* pop(2)*"],
-            // e3 vs e6
-            ["push(2)* (pop(2) pop(2))*", "pop(2)* (push(2) push(2))*"],
-            // e4 vs e5
-            ["(pop(2) pop(2))* push(2)*", "(push(2) push(2))* pop(2)*"],
-            // e4 vs e6
-            ["(pop(2) pop(2))* push(2)*", "pop(2)* (push(2) push(2))*"],
-            // e5 vs e6
-            ["(push(2) push(2))* pop(2)*", "pop(2)* (push(2) push(2))*"],
-
-            // --- test_decide_equivalence_all_pure_headers ---
-            // e1 vs e2
-            ["f:=2 g:=3", "g:=3 f:=2"],
-            // e3 vs e4
-            ["f:=2 f==2", "f:=2 f:=2"],
-            // e5 vs e6
-            ["f:=2* g:=3", "g:=3 f:=2*"],
-            // e7 vs e8
-            ["(f:=2 + g:=3)*", "(g:=3 + f:=2)*"],
-            // e9 vs e10
-            ["f:=2* g:=3*", "g:=3* f:=2*"],
-            // e11 vs e12
-            ["(f:=2 + g:=3) f:=4*", "(g:=3 + f:=2) f:=4*"],
-            // e13 vs e14
-            ["f:=2* (g:=3 + h:=4)", "f:=2* (h:=4 + g:=3)"],
-            // e15 vs e16
-            ["(f:=2 + g:=3)* h:=4", "h:=4 (f:=2 + g:=3)*"],
-            // e17 vs e18
-            ["f:=2* (g:=3 + h:=4)*", "(g:=3 + h:=4)* f:=2*"],
-            // e19 vs e20
-            ["f:=2 + f:=3", "f:=2 + f:=2"],
-            ["f:=2 + f==2", "f:=2"],
-            // e23 vs e24
-            ["f:=3*", "f:=2*"],
-            // e21 vs e22
-            ["(f:=2 + f:=3)*", "(f:=2 + f:=2)*"],
-
-            // --- test_decide_equivalence_mixed_headers_push_pop ---
-            // e1 vs e2
-            ["pop(3) f:=2 push(2) pop(2) f:=3", "f:=3 pop(3)"],
-
-            // more interesting examples
-            [
-                "f:=1 (f==1 f:=2 push(1) + f==2 f:=3 push(2))* f==3",
-                "f:=1 f:=3 push(1) push(2)"
-            ],
-            [
-                "f:=1 (f==1 push(1) + f==1 pop(1))* f:=2",
-                "f:=1 (push(1) + pop(1))* f:=2"
-            ],
-            [
-                "f:=2 push(1)* (f==2 pop(1))*",
-                "f:=2 (push(1) + pop(1))*"
-            ],
-            [
-                "f:=1 push(1)* f:=2",
-                "f:=1 (push(1) + push(2))* f:=2"
-            ]
-        ];
-
-        // tests();
     </script>
     <style>
         body {
@@ -1246,13 +934,7 @@
 </head>
 
 <body>
-    <h1>StacKAT playground</h1>
-
-    <div style="margin-bottom: 20px">
-        <!-- <button id="nextExample" style="font-size: 16px; padding: 8px 16px; cursor: pointer;">Next Example</button> -->
-        <!-- <button id="prevExample" style="font-size: 16px; padding: 8px 16px; cursor: pointer;">Prev Example</button> -->
-        <button id="randomExample" style="font-size: 16px; padding: 8px 16px; cursor: pointer;">Random Example</button>
-    </div>
+    <h1>StacKAT</h1>
 
     <div id="inputs">
         <div class="editor" id="editor1">
@@ -1285,30 +967,6 @@
     <div id="counterexampleB" class="counterexample"></div>
 
     <script>
-        let currentExampleIndex = 0;
-
-        function shiftExample(delta) {
-            currentExampleIndex = (currentExampleIndex + delta + allExamples.length) % allExamples.length;
-            let [expr1, expr2] = allExamples[currentExampleIndex];
-            document.querySelector('#editor1 .expr').value = expr1;
-            document.querySelector('#editor2 .expr').value = expr2;
-            document.querySelector('#editor1 .expr').dispatchEvent(new Event('input'));
-            document.querySelector('#editor2 .expr').dispatchEvent(new Event('input'));
-        }
-
-        // document.getElementById('nextExample').addEventListener('click', () => {
-        //     shiftExample(1);
-        // });
-
-        // document.getElementById('prevExample').addEventListener('click', () => {
-        //     shiftExample(-1);
-        // });
-
-        document.getElementById('randomExample').addEventListener('click', () => {
-            currentExampleIndex = Math.floor(Math.random() * allExamples.length);
-            shiftExample(0);
-        });
-
         function mkEditor(selector, callback) {
             const editor = document.querySelector(selector);
             const expr = editor.querySelector('.expr');
@@ -1336,8 +994,16 @@
         }
         var result1 = null;
         var result2 = null;
-        function minautemp(result, values) {
-            return minaut(result, values, new Map(), new Map());
+        function minaut(result, values) {
+            let aut = automaton(result, new Map(), new Map())
+            aut = pushpop(aut);
+            aut = zip(aut);
+            addStartLoopsMut(aut, values);
+            aut = removeEps(aut);
+            aut = removeDead(aut);
+            aut = determinize(aut);
+            aut = minimize(aut);
+            return aut;
         }
         function pathToStackPair(path) {
             if (path === false) return false;
@@ -1373,15 +1039,14 @@
             let values = Array.from(new Set(getValues(result1).concat(getValues(result2))));
             // remove duplicates from values
             // console.log("values", values);
-            let automaton1 = minautemp(result1, values);
+            let automaton1 = minaut(result1, values);
             // console.log("aut1", automaton1);
-            let automaton2 = minautemp(result2, values);
+            let automaton2 = minaut(result2, values);
             // console.log("aut2", automaton2);
-            let [path1, respks1, path2, respks2] = decide(result1, result2);
+            let path1 = shortestDifferingPath(automaton1, automaton2);
             console.log("path1", path1)
-            console.log("respks1", respks1)
+            let path2 = shortestDifferingPath(automaton2, automaton1);
             console.log("path2", path2)
-            console.log("respks2", respks2)
             if (path1 === false && path2 === false) {
                 document.getElementById('comparison').innerText = '=';
             } else if (path1 === false) {
@@ -1391,24 +1056,19 @@
             } else {
                 document.getElementById('comparison').innerText = '≠';
             }
-            function prettyPk(pk) {
-                return `{${Array.from(pk.entries()).map(([key, value]) => `${key}=${value}`).join(", ")}}`;
-            }
             if (path1 === false) {
                 document.getElementById('counterexampleA').innerHTML = '';
             } else {
                 let [input, output] = pathToStackPair(path1);
-                let [inpk, outpk] = respks1;
                 document.getElementById('counterexampleA').innerHTML =
-                    `Input ${prettyPk(inpk)}[${input.join(", ")}] outputs ${prettyPk(outpk)}[${output.join(", ")}] on the left but not on the right.`;
+                    `Input [${input.join(", ")}] outputs [${output.join(", ")}] on the left but not on the right.`;
             }
             if (path2 === false) {
                 document.getElementById('counterexampleB').innerHTML = '';
             } else {
                 let [input, output] = pathToStackPair(path2);
-                let [inpk, outpk] = respks2;
                 document.getElementById('counterexampleB').innerHTML =
-                    `Input ${prettyPk(inpk)}[${input.join(", ")}] outputs ${prettyPk(outpk)}[${output.join(", ")}] on the right but not on the left.`;
+                    `Input [${input.join(", ")}] outputs [${output.join(", ")}] on the right but not on the left.`;
             }
 
             // let aut = automaton(result1, new Map(), new Map())
