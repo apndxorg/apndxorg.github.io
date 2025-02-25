@@ -146,6 +146,9 @@ class StacKATApp {
         // Create the smart debouncer
         this.smartDebounce = createSmartDebounce();
 
+        // Flag to enable/disable the decision procedure
+        this.decisionProcedureEnabled = true;
+
         this.setupEventListeners();
 
         // Only perform the initial check if the WASM module is already loaded
@@ -165,6 +168,7 @@ class StacKATApp {
             lineNumbers: true,
             matchBrackets: true,
             autoCloseBrackets: true,
+            lineWrapping: true,
             extraKeys: {
                 "Ctrl-Space": "autocomplete",
                 "Tab": function(cm) {
@@ -179,6 +183,7 @@ class StacKATApp {
             lineNumbers: true,
             matchBrackets: true,
             autoCloseBrackets: true,
+            lineWrapping: true,
             extraKeys: {
                 "Ctrl-Space": "autocomplete",
                 "Tab": function(cm) {
@@ -194,7 +199,14 @@ class StacKATApp {
 
     setupEventListeners() {
         // Use the smart debounce that only delays if a request is in flight
-        const handleInput = () => this.smartDebounce(() => this.checkEquivalence());
+        const handleInput = () => {
+            if (this.decisionProcedureEnabled) {
+                this.smartDebounce(() => this.checkEquivalence());
+            }
+        };
+
+        // Store the handler function for later use
+        this.handleInput = handleInput;
 
         // Add change event listeners to CodeMirror editors
         this.editor1.on('change', () => {
@@ -207,6 +219,36 @@ class StacKATApp {
             this.expr2Value = this.editor2.getValue();
             this.validateSyntax(2);
             handleInput();
+        });
+    }
+
+    // Method to disable change handlers temporarily
+    disableChangeHandlers() {
+        this.editor1.off('change');
+        this.editor2.off('change');
+    }
+
+    // Method to re-enable change handlers
+    enableChangeHandlers() {
+        // Clear any existing handlers first
+        this.editor1.off('change');
+        this.editor2.off('change');
+
+        // Re-add the handlers
+        this.editor1.on('change', () => {
+            this.expr1Value = this.editor1.getValue();
+            this.validateSyntax(1);
+            if (this.decisionProcedureEnabled) {
+                this.handleInput();
+            }
+        });
+
+        this.editor2.on('change', () => {
+            this.expr2Value = this.editor2.getValue();
+            this.validateSyntax(2);
+            if (this.decisionProcedureEnabled) {
+                this.handleInput();
+            }
         });
     }
 
@@ -336,6 +378,11 @@ class StacKATApp {
     }
 
     checkEquivalence() {
+        // If decision procedure is disabled, don't proceed
+        if (!this.decisionProcedureEnabled) {
+            return;
+        }
+
         const expr1 = this.expr1Value.trim();
         const expr2 = this.expr2Value.trim();
 
@@ -499,13 +546,13 @@ window.addEventListener('load', () => {
     // Check if the WASM module is loaded
     if (window.stackat && window.stackat.checkEquivalence) {
         console.log('WASM module already loaded, initializing app');
-        new StacKATApp();
+        window.app = new StacKATApp();
     } else {
         // If not loaded yet, wait for it
         console.log('WASM module not loaded yet, waiting for event');
         document.addEventListener('stackat-wasm-loaded', () => {
             console.log('WASM module loaded event received, initializing app');
-            new StacKATApp();
+            window.app = new StacKATApp();
         });
     }
 });

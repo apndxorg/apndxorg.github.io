@@ -51,6 +51,28 @@
             padding-top: 10px;
         }
 
+        /* Cat logo animation */
+        #cat-logo {
+            transition: transform 0.3s ease;
+        }
+
+        #cat-logo:hover {
+            transform: scale(1.1);
+        }
+
+        #cat-logo:active {
+            transform: scale(0.95);
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .cat-bounce {
+            animation: bounce 0.5s ease;
+        }
+
         .header .toprightlink {
             position: absolute;
             right: 10px;
@@ -311,6 +333,72 @@
             padding: 8px;
         }
 
+        /* Example pairs section */
+        .example-pairs-section {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .example-pairs-section h3 {
+            margin-bottom: 15px;
+        }
+
+        .example-pairs-section .card-body {
+            /* max-height: 400px; */
+            /* overflow-y: auto; */
+        }
+
+        .example-pair-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            font-family: monospace;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: background-color 0.2s;
+        }
+
+        .example-pair-item:hover {
+            background-color: rgba(0,0,0,0.05);
+        }
+
+        .example-left, .example-right {
+            display: inline-block;
+            max-width: 45%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            vertical-align: middle;
+        }
+
+        /* Relationship symbols */
+        .relation-equal {
+            color: #155724;
+            font-weight: bold;
+            margin: 0 8px;
+        }
+
+        .relation-subset {
+            color: #004085;
+            font-weight: bold;
+            margin: 0 8px;
+        }
+
+        .relation-superset {
+            color: #664d03;
+            font-weight: bold;
+            margin: 0 8px;
+        }
+
+        .relation-incomparable {
+            color: #721c24;
+            font-weight: bold;
+            margin: 0 8px;
+        }
+
         /* Autocomplete styles */
         .cm-hint-container {
             z-index: 10;
@@ -356,7 +444,7 @@
         <a href="stackatv1.html" class="toprightlink">Switch to old version</a>
         <h1>
             StacKAT
-            <svg width="40" height="40" viewBox="0 0 40 40" style="margin-right: 10px; vertical-align: middle;">
+            <svg width="40" height="40" viewBox="0 0 40 40" style="margin-right: 10px; vertical-align: middle; cursor: pointer;" id="cat-logo">
                 <!-- Stack layers with gradient and shadow -->
                 <defs>
                     <linearGradient id="stackGradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -515,6 +603,42 @@
                 </tbody>
             </table>
         </div>
+
+        <div class="example-pairs-section">
+            <h3>Example Expression Pairs</h3>
+            <p>Click on the cat logo at the top to load a random example pair, or click on any pair below to load it.</p>
+            <div class="row" id="example-pairs-container">
+                <!-- Example pairs with new layout -->
+                <div class="col-md-6 mb-4">
+                    <div class="card border-success h-100">
+                        <div class="card-header bg-success text-white">Equal (=)</div>
+                        <div class="card-body p-0" id="equal-examples">
+                            <!-- Equal examples will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-primary mb-3">
+                        <div class="card-header bg-primary text-white">Right is greater (⊂)</div>
+                        <div class="card-body p-0" id="left-subset-examples">
+                            <!-- Left subset examples will be loaded here -->
+                        </div>
+                    </div>
+                    <div class="card border-warning mb-3">
+                        <div class="card-header bg-warning text-white">Left is greater (⊃)</div>
+                        <div class="card-body p-0" id="right-subset-examples">
+                            <!-- Right subset examples will be loaded here -->
+                        </div>
+                    </div>
+                    <div class="card border-danger mb-3">
+                        <div class="card-header bg-danger text-white">Incomparable (≠)</div>
+                        <div class="card-body p-0" id="not-equal-examples">
+                            <!-- Not equal examples will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
@@ -523,6 +647,268 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/matchbrackets.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/closebrackets.min.js"></script>
+
+    <script>
+        // Example pairs without pre-computed results
+        const examplePairs = [
+            // From unit tests
+            { left: "push 2 ; pop 2", right: "push 2 ; pop 2" },
+            { left: "(push 2)* ; (pop 2)*", right: "(push 2)* + (pop 2)*" },
+            { left: "(push 2)* ; (pop 2)*", right: "(push 2)*" },
+            { left: "(push 2)* ; (pop 2)*", right: "(push 3)* ; (pop 3)*" },
+            { left: "(push 2)* ; pop 2", right: "(push 2)* ; (pop 2)*" },
+            { left: "(pop 2)* ; (push 2)*", right: "(push 2 + pop 2)*" },
+            { left: "(push 2)* ; (pop 2 ; pop 2)*", right: "(pop 2 ; pop 2)* ; (push 2)*" },
+            { left: "(push 2 ; push 2)* ; (pop 2)*", right: "(pop 2)* ; (push 2 ; push 2)*" },
+            { left: "(pop 2)* ; (push 2 ; push 2)*", right: "(pop 2 ; pop 2)* ; (push 2)*" },
+            { left: "(pop 2)* ; (push 2 ; push 2)*", right: "(push 2 ; push 2)*" },
+            { left: "(pop 2)* ; (push 2 ; push 2)*", right: "(pop 2 ; pop 2)*" },
+            { left: "(pop 2 ; pop 2)* ; (push 2)*", right: "(push 2 ; push 2)* ; (pop 2)*" },
+            { left: "(push 2)* ; (pop 2)*", right: "(push 2 ; pop 2)*" },
+            { left: "(push 2)* ; (pop 2)*", right: "(push 2)* ; (pop 2)* ; (push 2)*" },
+            { left: "(push 2)* ; (pop 2)*", right: "(push 2)* ; (pop 2)* ; (pop 2)*" },
+            { left: "(push 2)* ; (pop 2)*", right: "(push 2)* ; (pop 2)* ; (push 2)* ; (pop 2)*" },
+            { left: "(push 2)* ; (pop 2)*", right: "(push 2 ; pop 2)*" },
+            { left: "(push 2)* ; (pop 2)*", right: "(push 2)* ; (pop 2)* ; (push 3)* ; (pop 3)*" },
+            { left: "(push 2)* ; (pop 2)*", right: "(push 2)* ; (pop 2)* ; (push 3)* ; (pop 3)*" },
+            { left: "(push 2)* ; (pop 2)*", right: "(push 2)* ; (pop 2)* ; (push 3)* ; (pop 3)*" },
+
+            // From stackatv1.html
+            { left: "(pop 2)* ; (push 2)*", right: "(push 2 + pop 2)*" },
+            { left: "(pop 2)* ; (push 2)*", right: "(push 2)* ; (pop 2 ; pop 2)*" },
+            { left: "(pop 2)* ; (push 2)*", right: "(pop 2 ; pop 2)* ; (push 2)*" },
+            { left: "(pop 2)* ; (push 2)*", right: "(push 2 ; push 2)* ; (pop 2)*" },
+            { left: "(pop 2)* ; (push 2)*", right: "(pop 2)* ; (push 2 ; push 2)*" },
+            { left: "(push 2 + pop 2)*", right: "(push 2)* ; (pop 2 ; pop 2)*" },
+            { left: "(push 2 + pop 2)*", right: "(pop 2 ; pop 2)* ; (push 2)*" },
+            { left: "(push 2 + pop 2)*", right: "(push 2 ; push 2)* ; (pop 2)*" },
+            { left: "(push 2 + pop 2)*", right: "(pop 2)* ; (push 2 ; push 2)*" },
+            { left: "(push 2)* ; (pop 2 ; pop 2)*", right: "(pop 2 ; pop 2)* ; (push 2)*" },
+            { left: "(push 2)* ; (pop 2 ; pop 2)*", right: "(push 2 ; push 2)* ; (pop 2)*" },
+            { left: "(push 2)* ; (pop 2 ; pop 2)*", right: "(pop 2)* ; (push 2 ; push 2)*" },
+            { left: "(pop 2 ; pop 2)* ; (push 2)*", right: "(push 2 ; push 2)* ; (pop 2)*" },
+            { left: "(pop 2 ; pop 2)* ; (push 2)*", right: "(pop 2)* ; (push 2 ; push 2)*" },
+            { left: "(push 2 ; push 2)* ; (pop 2)*", right: "(pop 2)* ; (push 2 ; push 2)*" },
+
+            // Pure headers examples
+            { left: "f:=2 ; g:=3", right: "g:=3 ; f:=2" },
+            { left: "f:=2 ; f==2", right: "f:=2 ; f:=2" },
+            { left: "(f:=2)* ; g:=3", right: "g:=3 ; (f:=2)*" },
+            { left: "(f:=2 + g:=3)*", right: "(g:=3 + f:=2)*" },
+            { left: "(f:=2)* ; (g:=3)*", right: "(g:=3)* ; (f:=2)*" },
+            { left: "(f:=2 + g:=3) ; (f:=4)*", right: "(g:=3 + f:=2) ; (f:=4)*" },
+            { left: "(f:=2)* ; (g:=3 + h:=4)", right: "(f:=2)* ; (h:=4 + g:=3)" },
+            { left: "(f:=2 + g:=3)* ; h:=4", right: "h:=4 ; (f:=2 + g:=3)*" },
+            { left: "(f:=2)* ; (g:=3 + h:=4)*", right: "(g:=3 + h:=4)* ; (f:=2)*" },
+            { left: "f:=2 + f:=3", right: "f:=2 + f:=2" },
+            { left: "f:=2 + f==2", right: "f:=2" },
+            { left: "(f:=3)*", right: "(f:=2)*" },
+            { left: "(f:=2 + f:=3)*", right: "(f:=2 + f:=2)*" },
+
+            // Mixed headers examples
+            { left: "pop 3 ; f:=2 ; push 2 ; pop 2 ; f:=3", right: "f:=3 ; pop 3" },
+
+            // More interesting examples
+            { left: "f := 1 ; (f == 1 ; f := 2 ; push 1 + f == 2 ; f := 3 ; push 2)* ; f == 3", right: "f := 1 ; f := 3 ; push 1 ; push 2" },
+            { left: "f := 1 ; (f == 1 ; push 1 + f == 1 ; pop 1)* ; f := 2", right: "f := 1 ; (push 1 + pop 1)* ; f := 2" },
+            { left: "f := 2 ; (push 1)* ; (f == 2 ; pop 1)*", right: "f := 2 ; (push 1 + pop 1)*" },
+            { left: "f := 1 ; (push 1)* ; f := 2", right: "f := 1 ; (push 1 + push 2)* ; f := 2" }
+        ];
+
+        // Computed results for each example pair
+        let computedResults = [];
+
+        // Function to compute the equivalence result for a pair
+        function computeEquivalence(pair) {
+            try {
+                if (window.stackat && window.stackat.checkEquivalence) {
+                    const result = window.stackat.checkEquivalence(pair.left, pair.right, [], []);
+                    return result.comparison;
+                }
+                return null;
+            } catch (error) {
+                console.error('Error computing equivalence:', error);
+                return null;
+            }
+        }
+
+        // Function to initialize computed results
+        function initializeComputedResults() {
+            console.log('Computing equivalence results for all example pairs...');
+            computedResults = examplePairs.map(pair => ({
+                ...pair,
+                result: computeEquivalence(pair)
+            }));
+            console.log('Finished computing equivalence results');
+
+            // Populate the example pairs UI
+            populateExamplePairs();
+        }
+
+        // Function to load a random example
+        function loadRandomExample() {
+            // Get a random example pair
+            const randomIndex = Math.floor(Math.random() * examplePairs.length);
+            const example = examplePairs[randomIndex];
+
+            // Add bounce animation to cat logo
+            const catLogo = document.getElementById('cat-logo');
+            catLogo.classList.add('cat-bounce');
+            setTimeout(() => catLogo.classList.remove('cat-bounce'), 500);
+
+            // Completely disable the decision procedure
+            let decisionProcedureWasEnabled = true;
+            if (window.app) {
+                // Store the current state of the decision procedure
+                decisionProcedureWasEnabled = window.app.decisionProcedureEnabled !== false;
+
+                // Disable change handlers
+                window.app.disableChangeHandlers();
+
+                // Disable the decision procedure completely
+                window.app.decisionProcedureEnabled = false;
+
+                // Set the values in the editors
+                window.app.editor1.setValue(example.left);
+                window.app.editor2.setValue(example.right);
+
+                // Re-enable change handlers but keep decision procedure disabled
+                window.app.enableChangeHandlers();
+
+                // Re-enable the decision procedure and trigger evaluation after a delay
+                setTimeout(() => {
+                    window.app.decisionProcedureEnabled = decisionProcedureWasEnabled;
+                    if (decisionProcedureWasEnabled && window.app.checkEquivalence) {
+                        window.app.checkEquivalence();
+                    }
+                }, 100);
+            }
+
+            // Scroll to the top of the page
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+
+        // Function to populate example pairs
+        function populateExamplePairs() {
+            const equalContainer = document.getElementById('equal-examples');
+            const leftSubsetContainer = document.getElementById('left-subset-examples');
+            const rightSubsetContainer = document.getElementById('right-subset-examples');
+            const notEqualContainer = document.getElementById('not-equal-examples');
+
+            // Clear containers
+            equalContainer.innerHTML = '';
+            leftSubsetContainer.innerHTML = '';
+            rightSubsetContainer.innerHTML = '';
+            notEqualContainer.innerHTML = '';
+
+            // Group examples by computed result
+            computedResults.forEach(pair => {
+                if (!pair.result) return; // Skip pairs with no computed result
+
+                const item = document.createElement('div');
+                item.className = 'example-pair-item';
+
+                // Format the display with the appropriate relationship symbol
+                let relationSymbol = '';
+                let relationClass = '';
+
+                switch (pair.result) {
+                    case 'Equal':
+                        relationSymbol = '=';
+                        relationClass = 'relation-equal';
+                        break;
+                    case 'LeftIsSubset':
+                        relationSymbol = '⊂';
+                        relationClass = 'relation-subset';
+                        break;
+                    case 'RightIsSubset':
+                        relationSymbol = '⊃';
+                        relationClass = 'relation-superset';
+                        break;
+                    case 'NotEqual':
+                        relationSymbol = '≠';
+                        relationClass = 'relation-incomparable';
+                        break;
+                }
+
+                item.innerHTML = `<span class="example-left">${pair.left}</span> <span class="${relationClass}">${relationSymbol}</span> <span class="example-right">${pair.right}</span>`;
+
+                // Add click event to load this example
+                item.addEventListener('click', () => {
+                    // Completely disable the decision procedure
+                    let decisionProcedureWasEnabled = true;
+                    if (window.app) {
+                        // Store the current state of the decision procedure
+                        decisionProcedureWasEnabled = window.app.decisionProcedureEnabled !== false;
+
+                        // Disable change handlers
+                        window.app.disableChangeHandlers();
+
+                        // Disable the decision procedure completely
+                        window.app.decisionProcedureEnabled = false;
+
+                        // Set the values in the editors
+                        window.app.editor1.setValue(pair.left);
+                        window.app.editor2.setValue(pair.right);
+
+                        // Re-enable change handlers but keep decision procedure disabled
+                        window.app.enableChangeHandlers();
+
+                        // Re-enable the decision procedure and trigger evaluation after a delay
+                        setTimeout(() => {
+                            window.app.decisionProcedureEnabled = decisionProcedureWasEnabled;
+                            if (decisionProcedureWasEnabled && window.app.checkEquivalence) {
+                                window.app.checkEquivalence();
+                            }
+                        }, 100);
+                    }
+
+                    // Scroll to the top of the page
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                    });
+                });
+
+                // Add to appropriate container based on computed result
+                switch (pair.result) {
+                    case 'Equal':
+                        equalContainer.appendChild(item);
+                        break;
+                    case 'LeftIsSubset':
+                        leftSubsetContainer.appendChild(item);
+                        break;
+                    case 'RightIsSubset':
+                        rightSubsetContainer.appendChild(item);
+                        break;
+                    case 'NotEqual':
+                        notEqualContainer.appendChild(item);
+                        break;
+                }
+            });
+        }
+
+        // Add event listener to cat logo and initialize results when WASM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            const catLogo = document.getElementById('cat-logo');
+            if (catLogo) {
+                catLogo.addEventListener('mousedown', loadRandomExample);
+                catLogo.title = "Click to load a random example";
+            }
+
+            // Initialize computed results when WASM is loaded
+            if (window.stackat && window.stackat.checkEquivalence) {
+                initializeComputedResults();
+            } else {
+                // If WASM is not loaded yet, wait for it
+                document.addEventListener('stackat-wasm-loaded', initializeComputedResults);
+            }
+        });
+    </script>
+
     <script type="module" src="./stackat_wasm_loader.js"></script>
     <script src="app.js"></script>
 </body>
