@@ -1,12 +1,12 @@
 // This file loads the WebAssembly module and exposes it to the browser
-import init, { check_equivalence, parse_expression } from 'stackat_wasm.js';
+import init, { check_equivalence, parse_expression } from './stackat_wasm.js';
 
 // Initialize the WebAssembly module
 async function initWasm() {
     console.log('Starting WebAssembly initialization...');
     try {
         console.time('WebAssembly initialization');
-        await init('stackat_wasm_bg.wasm');
+        await init('./stackat_wasm_bg.wasm');
         console.timeEnd('WebAssembly initialization');
 
         // Expose the check_equivalence function to the browser
