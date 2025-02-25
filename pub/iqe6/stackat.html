@@ -436,6 +436,13 @@
         code {
             color: #0056b3;
         }
+
+        svg {
+            user-select: none;
+            -webkit-user-select: none; /* For Safari */
+            -moz-user-select: none;    /* For Firefox */
+            -ms-user-select: none;     /* For IE */
+        }
     </style>
 </head>
 <body>
@@ -747,6 +754,8 @@
 
         // Function to load a random example
         function loadRandomExample() {
+            // document.activeElement.blur();
+
             // Get a random example pair
             const randomIndex = Math.floor(Math.random() * examplePairs.length);
             const example = examplePairs[randomIndex];
